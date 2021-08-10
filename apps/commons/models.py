@@ -16,6 +16,16 @@ class SystemBaseUser(models.Model):
     class Meta:
         abstract = True
 
+#######################################################################
+#                   Admin for the System
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    mobile = models.CharField(max_length=10, validators=[validate_phone])
+    image = models.ImageField(upload_to="admins")
+
+    def __str__(self):
+        return f"Admin : {self.user.username}"
+
 ##############################################################
 #           Owner of vehicle both Rentable and Bookable
 class Owner(SystemBaseUser):

@@ -7,6 +7,13 @@ from django.utils import timezone
 from .utils import (age, )
 
 
+########################################################################################
+#               General User Login Form
+class UserLoginForm(forms.Form):
+    username = forms.CharField(widget=forms.TextInput())
+    password = forms.CharField(widget=forms.PasswordInput())
+
+
 ########################################################################3
 #                   Base User Registeration Form
 class BaseUserRegisterationForm(forms.ModelForm):
@@ -109,13 +116,12 @@ class CustomerRegisterationForm(BaseUserRegisterationForm):
 ######################################################################################
 #               Owner Registeration Form
 class OwnerRegisterationForm(BaseUserRegisterationForm):
-
-        class Meta:
-            model = Owner
-            fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email',
+    class Meta:
+        model = Owner
+        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email',
                   'mobile', 'perm_address', 'curr_address']
 
-        def __init__(self, *args, **kwargs):
-            fields = {'submit_name': 'Sign Up', }
-            kwargs['fields'] = fields
-            super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        fields = {'submit_name': 'Sign Up', }
+        kwargs['fields'] = fields
+        super().__init__(*args, **kwargs)

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load static %}
+
+{% block main %}
+<div class="container">
+<div class="row">
+    <div class="col-md-5 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex flex-row align-items-end justify-content-between">
+                <div style="flex: 2">
+                    <h2 class="text-primary">Sign In </h2>
+                </div>
+                <div style="flex: 1" >
+                    <img src="{% static 'logos/logo1.png' %}" class="img-fluid align-self-start" width="90%">
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="text-danger">{{ error }}</h6>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-outline-primary">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock main %}

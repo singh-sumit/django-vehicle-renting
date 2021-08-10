@@ -120,14 +120,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR.parent / 'assets/static']
-STATIC_ROOT = BASE_DIR.parent / 'static_cdn'
-
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / "static_cdn"
 
 ################################################
 #               MEDIA FILE SETTINGS
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR.parent / 'assets/media'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -136,3 +137,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+print("??????????????", BASE_DIR)
