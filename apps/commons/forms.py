@@ -1,34 +1,27 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Row, Submit
 from django import forms
-from .models import (Customer)
+from .models import (Customer, Owner)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .utils import (age, )
 
 
 ########################################################################3
-#                   Customer Registeration Form
-class CustomerRegisterationForm(forms.ModelForm):
+#                   Base User Registeration Form
+class BaseUserRegisterationForm(forms.ModelForm):
     username = forms.CharField(widget=forms.TextInput())
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
     email = forms.CharField(widget=forms.EmailInput())
     first_name = forms.CharField(widget=forms.TextInput())
     last_name = forms.CharField(widget=forms.TextInput())
-    perm_address = forms.CharField(label="Permanent Address",)
-    curr_address = forms.CharField(label="Current Address",)
-
-    dob = forms.DateField(label="Birth Date",
-                          widget=forms.DateInput(attrs={'type': 'date'}))
-
-
-    class Meta:
-        model = Customer
-        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'dob',
-                  'mobile', 'perm_address', 'curr_address']
+    perm_address = forms.CharField(label="Permanent Address", )
+    curr_address = forms.CharField(label="Current Address", )
 
     def __init__(self, *args, **kwargs):
+        fields = kwargs['fields']
+        del kwargs['fields']
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
@@ -46,15 +39,15 @@ class CustomerRegisterationForm(forms.ModelForm):
             ),
             Row(
                 Column('perm_address', css_class='form-group col-md-6 mb-0'),
-                Column('curr_address', css_class='form-group col-md-6 mb-0',),
+                Column('curr_address', css_class='form-group col-md-6 mb-0', ),
                 css_class='form-row'
             ),
             Row(
-                Column('dob', css_class='form-group col-md-6 mb-0'),
                 Column('mobile', css_class='form-group col-md-6 mb-0'),
+                Column('dob', css_class='form-group col-md-6 mb-0'),
                 css_class='form-row'
             ),
-            Submit('submit', 'Sign Up', css_class='btn btn-primary')
+            Submit('submit', fields['submit_name'], css_class='btn btn-primary')
         )
 
     def clean_username(self):
@@ -87,8 +80,42 @@ class CustomerRegisterationForm(forms.ModelForm):
             raise forms.ValidationError("Customer with that email already exists.")
         return uemail
 
+
+#####################################################################################
+#                 Customer Registeration Form
+class CustomerRegisterationForm(BaseUserRegisterationForm):
+    dob = forms.DateField(label="Birth Date",
+                          widget=forms.DateInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = Customer
+        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email',
+                  'mobile', 'dob', 'perm_address', 'curr_address']
+
+    def __init__(self, *args, **kwargs):
+        fields = {'submit_name': 'Sign Up', }
+        kwargs['fields'] = fields
+        super().__init__(*args, **kwargs)
+
+    #################################################################3
+    #       Field Cleaning Operations
     def clean_dob(self):
         udob = self.cleaned_data.get('dob')
         if age(udob) < 18:
             raise forms.ValidationError("Your age must be greater than 18 years.")
         return udob
+
+
+######################################################################################
+#               Owner Registeration Form
+class OwnerRegisterationForm(BaseUserRegisterationForm):
+
+        class Meta:
+            model = Owner
+            fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email',
+                  'mobile', 'perm_address', 'curr_address']
+
+        def __init__(self, *args, **kwargs):
+            fields = {'submit_name': 'Sign Up', }
+            kwargs['fields'] = fields
+            super().__init__(*args, **kwargs)

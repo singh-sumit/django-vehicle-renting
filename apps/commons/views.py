@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.views.generic import (TemplateView, CreateView)
-from .forms import (CustomerRegisterationForm)
+from .forms import (CustomerRegisterationForm, OwnerRegisterationForm)
 from .models import (Customer, )
 from django.utils import timezone
 
@@ -18,7 +18,7 @@ class HomeView(TemplateView):
 ################################################################
 #               Customer Register View
 class CustomerRegisterView(CreateView):
-    template_name = 'auth/register.html'
+    template_name = 'auth/register/customer.html'
     form_class = CustomerRegisterationForm
     success_url = reverse_lazy('commons:home')
 
@@ -48,3 +48,13 @@ class CustomerRegisterView(CreateView):
 
     def form_invalid(self, form):
         return super().form_invalid(form)
+
+################################################################
+#               Owner Register View
+class OwnerRegisterView(CreateView):
+    template_name = 'auth/register/owner.html'
+    form_class = OwnerRegisterationForm
+    success_url = reverse_lazy('commons:home')
+
+
+
