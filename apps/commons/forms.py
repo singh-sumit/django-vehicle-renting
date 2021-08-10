@@ -171,3 +171,25 @@ class CSRRegistrationForm(forms.ModelForm):
             ),
             Submit('submit', "Add", css_class='btn btn-primary')
         )
+
+####################################################################################
+#               CSR Password Update Form
+class CSRPasswordUpdateForm(forms.Form):
+    password1 = forms.CharField(widget=forms.PasswordInput(), label='New Password')
+    password2 = forms.CharField(widget=forms.PasswordInput(), label='Confirm Password')
+
+    def clean(self):
+        upwd1 = self.cleaned_data.get('password1')
+        upwd2 = self.cleaned_data.get('password2')
+        # check if two password matched,and is of length > 8 , with proper characters (^,/,$,!,?)
+        special_chars = ('/', '$', '!', '?')
+        if (upwd1!='abcd1234') and (upwd1 == upwd2):
+            if (len(upwd1) >= 8):
+                if any((spc in upwd1) for spc in special_chars):
+                    return upwd2
+                else:
+                    raise forms.ValidationError("Passwords must contain either of special chars ^,/,$,!,? ")
+            else:
+                raise forms.ValidationError("Password must be greater than 8")
+        else:
+            raise forms.ValidationError("Old Password Entered. Or, Password didn't matched.")

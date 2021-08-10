@@ -3,7 +3,8 @@ from django.urls import reverse_lazy
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.views.generic import (TemplateView, CreateView, FormView, View)
-from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm)
+from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
+                    CSRPasswordUpdateForm)
 from .models import (Customer, Owner, Admin, CSR)
 from django.utils import timezone
 
@@ -14,12 +15,14 @@ from django.utils import timezone
 class HomeView(TemplateView):
     template_name = "home.html"
 
+
 ###########################################################################
 #           Logout Customer, Owner, CSR, Admin
 class UserLogoutView(View):
     def get(self, request, *args, **kwargs):
         logout(request)
         return redirect("commons:home")
+
 
 ################################################################
 #               Customer Register View
@@ -117,6 +120,71 @@ class OwnerLoginView(FormView):
                       {'form': form, 'error': 'Invalid Credentails'})
 
 
+######################################################################
+#           CSR Login View
+class CSRLoginView(FormView):
+    template_name = "auth/login/csr.html"
+    form_class = UserLoginForm
+    success_url = reverse_lazy('commons:csr-home')
+
+    # check if form_valid and allow csr to its home page
+    def form_valid(self, form):
+        uname = form.cleaned_data.get('username')
+        pwd = form.cleaned_data.get('password')
+
+        # authenticate user with uname and pwd
+        usr = authenticate(username=uname, password=pwd)
+
+        # check if logged in first time with default password
+        if (usr is not None) and (CSR.objects.filter(user=usr).exists()):
+            # make usr grant its login session
+            login(self.request, usr)
+
+            if (pwd=='abcd1234'):
+                # make csr to reset password
+                return redirect(reverse_lazy('commons:csr-pwd-update', kwargs={'pk': usr.csr.id, }))
+            else:
+                # return csr to its home page
+                return super().form_valid(form)
+        else:
+            # Credentials didn't matched
+            return render(self.request, self.template_name,
+                          {'form':form, 'error': 'Invalid Credentials. Try Again!!!'})
+
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Invalid Credentials. Try Again!!!'})
+
+######################################################################
+#                   CSR Password Update View
+class CSRPasswordUpdateView(FormView):
+    template_name = "csr/update_pwd.html"
+    form_class = CSRPasswordUpdateForm
+    success_url = reverse_lazy('commons:home')
+
+    def form_valid(self, form):
+        csrid=self.kwargs['pk']
+        pwd = form.cleaned_data
+
+        # save password to csr object
+        csr = CSR.objects.get(id=csrid)
+        csr.user.set_password(pwd)
+        csr.user.save()
+
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Something is wrong.Please Try Again!!'})
+
+
+#######################################################################
+#                   CSR Home View
+class CSRHomeView(TemplateView):
+    template_name = "csr/home.html"
+
+
 ########################################################################3
 #           System Admin Home View
 class SystemAdminHomeView(TemplateView):
@@ -152,6 +220,7 @@ class SystemAdminLoginView(FormView):
         return render(self.request, self.template_name,
                       {'form': form, 'error': 'Invalid Credentails'})
 
+
 ########################################################################
 #            Add CSR <-- System Admin
 class AddCSRView(CreateView):
@@ -176,7 +245,7 @@ class AddCSRView(CreateView):
 
         # Create customer instance from user object
         customer = CSR.objects.create(user=user, salary=salary, perm_address=perm_address,
-                                           curr_address=curr_address, mobile=mobile)
+                                      curr_address=curr_address, mobile=mobile)
 
         # make user login to system
         # login(self.request, user)
@@ -184,4 +253,3 @@ class AddCSRView(CreateView):
 
     def form_invalid(self, form):
         return super().form_invalid(form)
-

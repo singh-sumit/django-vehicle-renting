@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLoginView, SystemAdminLoginView,
-                    SystemAdminHomeView, UserLogoutView, AddCSRView)
+                    SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView)
 
 app_name = 'commons'
 
@@ -15,6 +15,13 @@ urlpatterns = [
     #                   System Admin Part
     path('sys/', SystemAdminLoginView.as_view(), name="admin-signin"),
     path('sys/home/', SystemAdminHomeView.as_view(), name="admin-home"),
-    path('sys/add-csr/', AddCSRView.as_view(), name="admin-add-csr")
+    path('sys/add-csr/', AddCSRView.as_view(), name="admin-add-csr"),
+
+    ######################################################################3
+    #                   CSR Part
+    path('csr/', CSRLoginView.as_view(), name="csr-signin"),
+    path('csr/home/', CSRHomeView.as_view(), name="csr-home"),
+    path('csr/pwd-update/<int:pk>/', CSRPasswordUpdateView.as_view(), name="csr-pwd-update"),
+
 
 ]

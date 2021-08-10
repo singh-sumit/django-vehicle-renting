@@ -8,15 +8,16 @@
 </head>
 <body>
 <!-- Start of Nav Section -->
-<a href="">Home</a> |
-{% if request.user.is_authenticated %}
+<a href="{% url 'commons:admin-home' %}">Home</a> |
+{% if request.user.csr %}
     <a href="">{{ request.user.username }} >> Profile</a> |
+    <a href="">Add Booth</a> |
+    <a href="">Update Booth</a> |
+    <a href="">Add Booth Manager</a> |
+    <a href="">Update Booth Manger</a> |
     <a href="{% url 'commons:logout' %}">Logout</a>  |
 {% else %}
-    <a href="{% url 'commons:owner_signin' %}">Login</a> |
-    <a href="{% url 'commons:customer_signup' %}">Register</a>  |
-    <a href="{% url 'commons:csr-signin' %}">CSR Login</a>  |
-
+    {% include '404.html' %}
 {% endif %}
 <hr>
 <!-- End of Nav Section -->
@@ -26,3 +27,4 @@
 {% endblock main %}
 </body>
 </html>
+
