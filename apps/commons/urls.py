@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLoginView, SystemAdminLoginView,
-                    SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView)
+                    SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView,
+                    AddBoothManagerView, AddBoothView)
 
 app_name = 'commons'
 
@@ -22,6 +23,8 @@ urlpatterns = [
     path('csr/', CSRLoginView.as_view(), name="csr-signin"),
     path('csr/home/', CSRHomeView.as_view(), name="csr-home"),
     path('csr/pwd-update/<int:pk>/', CSRPasswordUpdateView.as_view(), name="csr-pwd-update"),
+    path('csr/booth-mngr/add/', AddBoothManagerView.as_view(), name="add-booth-mngr"),
+    path('csr/booth/add/', AddBoothView.as_view(), name="add-booth"),
 
 
 ]

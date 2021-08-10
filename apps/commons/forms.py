@@ -2,11 +2,11 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Row, Submit
 from django import forms
 from django.forms import BaseModelForm, TextInput
-
 from .models import (Customer, Owner, CSR)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .utils import (age, )
+from ..vehicle_rental.models import BoothManager, Booth
 
 
 ########################################################################################
@@ -172,6 +172,13 @@ class CSRRegistrationForm(forms.ModelForm):
             Submit('submit', "Add", css_class='btn btn-primary')
         )
 
+    def clean_username(self):
+        return BaseUserRegisterationForm.clean_username(self)
+
+    def clean_email(self):
+        return BaseUserRegisterationForm.clean_email(self)
+
+
 ####################################################################################
 #               CSR Password Update Form
 class CSRPasswordUpdateForm(forms.Form):
@@ -183,7 +190,7 @@ class CSRPasswordUpdateForm(forms.Form):
         upwd2 = self.cleaned_data.get('password2')
         # check if two password matched,and is of length > 8 , with proper characters (^,/,$,!,?)
         special_chars = ('/', '$', '!', '?')
-        if (upwd1!='abcd1234') and (upwd1 == upwd2):
+        if (upwd1 != 'abcd1234') and (upwd1 == upwd2):
             if (len(upwd1) >= 8):
                 if any((spc in upwd1) for spc in special_chars):
                     return upwd2
@@ -193,3 +200,59 @@ class CSRPasswordUpdateForm(forms.Form):
                 raise forms.ValidationError("Password must be greater than 8")
         else:
             raise forms.ValidationError("Old Password Entered. Or, Password didn't matched.")
+
+
+###############################################################################
+#          Form for Adding Booth Manager to Office <-- CSR
+class BoothManagerAddForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput())
+    # password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
+    # password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
+    email = forms.CharField(widget=forms.EmailInput())
+    first_name = forms.CharField(widget=forms.TextInput())
+    last_name = forms.CharField(widget=forms.TextInput())
+    perm_address = forms.CharField(label="Permanent Address", )
+    curr_address = forms.CharField(label="Current Address", )
+
+    class Meta:
+        model = BoothManager
+        fields = ['username', 'first_name', 'last_name', 'email', 'mobile',
+                  'perm_address', 'curr_address', ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('username', css_class='form-group col-md-4 mb-0'),
+                Column('mobile', css_class='form-group col-md-4 mb-0'),
+                Column('email', css_class='form-group col-md-4 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('first_name', css_class='form-group col-md-6 mb-0'),
+                Column('last_name', css_class='form-group col-md-6 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('perm_address', css_class='form-group col-md-6 mb-0'),
+                Column('curr_address', css_class='form-group col-md-6 mb-0', ),
+                css_class='form-row'
+            ),
+            Submit('submit', "Add", css_class='btn btn-primary')
+        )
+
+    def clean_username(self):
+        return BaseUserRegisterationForm.clean_username(self)
+
+    def clean_email(self):
+        return BaseUserRegisterationForm.clean_email(self)
+
+#############################################################################
+#           Form for adding Booth Office    <-- CSR
+class AddBoothForm(forms.ModelForm):
+    class Meta:
+        model = Booth
+        fields = "__all__"
+
+

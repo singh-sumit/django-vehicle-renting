@@ -9,7 +9,8 @@ from django.core.validators import (MinLengthValidator)
 #######################################################################################
 #               Booth Manager
 class BoothManager(SystemBaseUser):
-    pass
+    def __str__(self):
+        return f"BoothManager : <{self.user.username}>"
 
 
 ############################################################################

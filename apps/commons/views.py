@@ -4,14 +4,16 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.views.generic import (TemplateView, CreateView, FormView, View)
 from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
-                    CSRPasswordUpdateForm)
+                    CSRPasswordUpdateForm, BoothManagerAddForm, AddBoothForm)
 from .models import (Customer, Owner, Admin, CSR)
 from django.utils import timezone
-
 
 # Create your views here.
 #################################################################
 #               Customer HomeView
+from ..vehicle_rental.models import BoothManager
+
+
 class HomeView(TemplateView):
     template_name = "home.html"
 
@@ -79,8 +81,8 @@ class OwnerRegisterView(CreateView):
         mobile = form.cleaned_data.get('mobile')
 
         # creating user instance
-        user = User.objects.create_user(username=username, password=password, first_name=first_name,
-                                        last_name=last_name, email=email, last_login=timezone.now())
+        user = User.objects.create_user(username=username, password=password, first_name=first_name.title(),
+                                        last_name=last_name.title(), email=email, last_login=timezone.now())
         # creating Owner instance
         owner = Owner.objects.create(user=user, perm_address=perm_address, curr_address=curr_address,
                                      mobile=mobile)
@@ -140,7 +142,7 @@ class CSRLoginView(FormView):
             # make usr grant its login session
             login(self.request, usr)
 
-            if (pwd=='abcd1234'):
+            if (pwd == 'abcd1234'):
                 # make csr to reset password
                 return redirect(reverse_lazy('commons:csr-pwd-update', kwargs={'pk': usr.csr.id, }))
             else:
@@ -149,12 +151,12 @@ class CSRLoginView(FormView):
         else:
             # Credentials didn't matched
             return render(self.request, self.template_name,
-                          {'form':form, 'error': 'Invalid Credentials. Try Again!!!'})
-
+                          {'form': form, 'error': 'Invalid Credentials. Try Again!!!'})
 
     def form_invalid(self, form):
         return render(self.request, self.template_name,
                       {'form': form, 'error': 'Invalid Credentials. Try Again!!!'})
+
 
 ######################################################################
 #                   CSR Password Update View
@@ -164,7 +166,7 @@ class CSRPasswordUpdateView(FormView):
     success_url = reverse_lazy('commons:home')
 
     def form_valid(self, form):
-        csrid=self.kwargs['pk']
+        csrid = self.kwargs['pk']
         pwd = form.cleaned_data
 
         # save password to csr object
@@ -183,6 +185,46 @@ class CSRPasswordUpdateView(FormView):
 #                   CSR Home View
 class CSRHomeView(TemplateView):
     template_name = "csr/home.html"
+
+
+#######################################################################
+#             Add Booth Office <-- CSR
+class AddBoothView(CreateView):
+    template_name = "csr/booth/add.html"
+    form_class = AddBoothForm
+    success_url = reverse_lazy('commons:csr-home')
+
+
+
+#######################################################################
+#             Add Booth Manager to Office <-- CSR
+class AddBoothManagerView(CreateView):
+    template_name = "csr/booth_manager/add.html"
+    form_class = BoothManagerAddForm
+    success_url = reverse_lazy('commons:csr-home')
+
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        first_name = form.cleaned_data.get('first_name')
+        last_name = form.cleaned_data.get('last_name')
+        email = form.cleaned_data.get('email')
+        perm_address = form.cleaned_data.get('perm_address')
+        curr_address = form.cleaned_data.get('curr_address')
+        mobile = form.cleaned_data.get('mobile')
+
+        # Create user instance
+        user = User.objects.create_user(username=username, password="abcd1234",
+                                        first_name=first_name.title(), last_name=last_name.title(),
+                                        email=email, last_login=timezone.now())
+
+        # Create customer instance from user object
+        booth_manager = BoothManager.objects.create(user=user, perm_address=perm_address,
+                                               curr_address=curr_address, mobile=mobile)
+
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
 
 ########################################################################3
@@ -244,8 +286,8 @@ class AddCSRView(CreateView):
                                         email=email, last_login=timezone.now())
 
         # Create customer instance from user object
-        customer = CSR.objects.create(user=user, salary=salary, perm_address=perm_address,
-                                      curr_address=curr_address, mobile=mobile)
+        csr = CSR.objects.create(user=user, salary=salary, perm_address=perm_address,
+                                 curr_address=curr_address, mobile=mobile)
 
         # make user login to system
         # login(self.request, user)

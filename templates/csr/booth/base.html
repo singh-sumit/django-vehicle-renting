@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_filters %}
+
+{% block main %}
+    <div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <div class="card p-5 border-primary">
+                        <div class="d-flex flex-row align-items-end justify-content-between">
+                            <div style="flex: 2">
+                                <h4 class="text-primary card-title">
+                                    {% block register_header %}{% endblock register_header %}</h4>
+                            </div>
+                            <div style="flex: 1">
+                                <img src="{% static 'logos/logo1.png' %}" class="img-fluid align-self-start"
+                                     width="50%">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                {% block submit %}{% endblock submit %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
