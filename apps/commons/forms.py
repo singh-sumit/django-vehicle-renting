@@ -1,7 +1,9 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Row, Submit
 from django import forms
-from .models import (Customer, Owner)
+from django.forms import BaseModelForm, TextInput
+
+from .models import (Customer, Owner, CSR)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .utils import (age, )
@@ -52,6 +54,7 @@ class BaseUserRegisterationForm(forms.ModelForm):
             Row(
                 Column('mobile', css_class='form-group col-md-6 mb-0'),
                 Column('dob', css_class='form-group col-md-6 mb-0'),
+                Column('salary', css_class='form-group col-md-6 mb-0'),
                 css_class='form-row'
             ),
             Submit('submit', fields['submit_name'], css_class='btn btn-primary')
@@ -125,3 +128,46 @@ class OwnerRegisterationForm(BaseUserRegisterationForm):
         fields = {'submit_name': 'Sign Up', }
         kwargs['fields'] = fields
         super().__init__(*args, **kwargs)
+
+
+#####################################################################################3
+#             CSR Registeration Form
+class CSRRegistrationForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput())
+    # password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
+    # password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
+    email = forms.CharField(widget=forms.EmailInput())
+    first_name = forms.CharField(widget=forms.TextInput())
+    last_name = forms.CharField(widget=forms.TextInput())
+    perm_address = forms.CharField(label="Permanent Address", )
+    curr_address = forms.CharField(label="Current Address", )
+    salary = forms.IntegerField()
+
+    class Meta:
+        model = CSR
+        fields = ['username', 'first_name', 'last_name', 'email', 'mobile',
+                  'perm_address', 'curr_address', 'salary']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('username', css_class='form-group col-md-4 mb-0'),
+                Column('mobile', css_class='form-group col-md-4 mb-0'),
+                Column('email', css_class='form-group col-md-4 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('first_name', css_class='form-group col-md-4 mb-0'),
+                Column('last_name', css_class='form-group col-md-4 mb-0'),
+                Column('salary', css_class='form-group col-md-4 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('perm_address', css_class='form-group col-md-6 mb-0'),
+                Column('curr_address', css_class='form-group col-md-6 mb-0', ),
+                css_class='form-row'
+            ),
+            Submit('submit', "Add", css_class='btn btn-primary')
+        )

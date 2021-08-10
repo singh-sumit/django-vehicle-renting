@@ -36,6 +36,9 @@ class Owner(SystemBaseUser):
 class CSR(SystemBaseUser):
     salary = models.PositiveIntegerField()
 
+    def __str__(self):
+        return f"CSR : {self.user.username}"
+
 
 ######################################################################
 #                       Customer

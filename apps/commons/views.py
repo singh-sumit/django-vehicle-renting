@@ -1,10 +1,10 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
-from django.views.generic import (TemplateView, CreateView, FormView)
-from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm)
-from .models import (Customer, Owner)
+from django.views.generic import (TemplateView, CreateView, FormView, View)
+from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm)
+from .models import (Customer, Owner, Admin, CSR)
 from django.utils import timezone
 
 
@@ -14,6 +14,12 @@ from django.utils import timezone
 class HomeView(TemplateView):
     template_name = "home.html"
 
+###########################################################################
+#           Logout Customer, Owner, CSR, Admin
+class UserLogoutView(View):
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return redirect("commons:home")
 
 ################################################################
 #               Customer Register View
@@ -40,7 +46,7 @@ class CustomerRegisterView(CreateView):
 
         # Create customer instance from user object
         customer = Customer.objects.create(user=user, dob=dob, perm_address=perm_address,
-                                           curr_address=curr_address,mobile=mobile)
+                                           curr_address=curr_address, mobile=mobile)
 
         # make user login to system
         login(self.request, user)
@@ -48,6 +54,7 @@ class CustomerRegisterView(CreateView):
 
     def form_invalid(self, form):
         return super().form_invalid(form)
+
 
 ################################################################
 #               Owner Register View
@@ -82,6 +89,7 @@ class OwnerRegisterView(CreateView):
     def form_invalid(self, form):
         return super().form_invalid(form)
 
+
 #################################################################
 #           Owner Login View
 class OwnerLoginView(FormView):
@@ -101,10 +109,79 @@ class OwnerLoginView(FormView):
             login(self.request, usr)
         else:
             return render(self.request, self.template_name,
-                          {'form': form,'error': 'Invalid Credentails'})
+                          {'form': form, 'error': 'Invalid Credentails'})
         return super().form_valid(form)
 
     def form_invalid(self, form):
         return render(self.request, self.template_name,
-                      {'form': form, 'error': 'Some Error Occured. Try Again!!'})
+                      {'form': form, 'error': 'Invalid Credentails'})
+
+
+########################################################################3
+#           System Admin Home View
+class SystemAdminHomeView(TemplateView):
+    template_name = "sysadmin/home.html"
+
+
+#########################################################################
+#           System Admin Login View
+class SystemAdminLoginView(FormView):
+    template_name = "auth/login/admin.html"
+    form_class = UserLoginForm
+    success_url = reverse_lazy('commons:admin-home')
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Invalid Credentials'})
+
+    def form_valid(self, form):
+        uname = form.cleaned_data.get('username')
+        pwd = form.cleaned_data.get('password')
+
+        # authenticate user
+        usr = authenticate(username=uname, password=pwd)
+
+        if (usr is not None) and (Admin.objects.filter(user=usr).exists()):
+            login(self.request, usr)
+        else:
+            return render(self.request, self.template_name,
+                          {'form': form, 'error': 'Invalid Credentails'})
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Invalid Credentails'})
+
+########################################################################
+#            Add CSR <-- System Admin
+class AddCSRView(CreateView):
+    template_name = "sysadmin/csr/add.html"
+    success_url = reverse_lazy('commons:admin-home')
+    form_class = CSRRegistrationForm
+
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        first_name = form.cleaned_data.get('first_name')
+        last_name = form.cleaned_data.get('last_name')
+        email = form.cleaned_data.get('email')
+        salary = form.cleaned_data.get('salary')
+        perm_address = form.cleaned_data.get('perm_address')
+        curr_address = form.cleaned_data.get('curr_address')
+        mobile = form.cleaned_data.get('mobile')
+
+        # Create user instance
+        user = User.objects.create_user(username=username, password="abcd1234",
+                                        first_name=first_name.title(), last_name=last_name.title(),
+                                        email=email, last_login=timezone.now())
+
+        # Create customer instance from user object
+        customer = CSR.objects.create(user=user, salary=salary, perm_address=perm_address,
+                                           curr_address=curr_address, mobile=mobile)
+
+        # make user login to system
+        # login(self.request, user)
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
