@@ -2,14 +2,20 @@ from django.urls import path
 from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLoginView, SystemAdminLoginView,
                     SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView,
                     AddBoothManagerView, AddBoothView, BoothManagerLoginView, BoothManagerAddBikeView,
-                    BoothManagerHomeView,BoothManagerPasswordUpdateView, BoothManagerAddCarView)
+                    BoothManagerHomeView, BoothManagerPasswordUpdateView, BoothManagerAddCarView, CustomerLoginView)
 
 app_name = 'commons'
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('logout/', UserLogoutView.as_view(), name="logout"),
-    path('customer-signup/', CustomerRegisterView.as_view(), name="customer_signup"),
+    #################################################################################
+    #                           Customer Part
+    path('cust-signup/', CustomerRegisterView.as_view(), name="cust_signup"),
+    path('cust-signin/', CustomerLoginView.as_view(), name="cust_signin"),
+
+    ###########################################################################
+    #                   Vehicle Owner Part
     path('owner-signup/', OwnerRegisterView.as_view(), name='owner_signup'),
     path('owner-signin/', OwnerLoginView.as_view(), name='owner_signin'),
 

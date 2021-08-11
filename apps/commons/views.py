@@ -17,6 +17,24 @@ from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle
 class HomeView(TemplateView):
     template_name = "home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # add vehicles objects to context
+        context['vehicle_lists'] = Vehicle.objects.filter(status="AVAILABLE")
+        """
+        [
+            {'name':'bike','count':12},
+            {'name':'car','count':4}
+        ]
+        """
+        vehicles = [Car, Bike]
+        context['available_vehicles'] = [
+            {'name': veh.__name__, 'count': veh.objects.filter(vehicle__status="AVAILABLE").count()}
+            for veh in vehicles
+        ]
+        print(context)
+        return context
+
 
 ###########################################################################
 #           Logout Customer, Owner, CSR, Admin
@@ -60,6 +78,31 @@ class CustomerRegisterView(CreateView):
     def form_invalid(self, form):
         return super().form_invalid(form)
 
+
+###############################################################
+#              Customer Login View
+class CustomerLoginView(FormView):
+    template_name = 'auth/login/customer.html'
+    form_class = UserLoginForm
+    success_url = reverse_lazy('commons:home')
+
+    def form_valid(self, form):
+        uname = form.cleaned_data.get('username')
+        pwd = form.cleaned_data.get('password')
+
+        # authenticate user
+        usr = authenticate(username=uname, password=pwd)
+
+        if (usr is not None) and (Customer.objects.filter(user=usr).exists()):
+            login(self.request, usr)
+        else:
+            return render(self.request, self.template_name,
+                          {'form': form, 'error': 'Invalid Credentails'})
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Invalid Credentials.'})
 
 ################################################################
 #               Owner Register View

@@ -21,6 +21,8 @@ class Booth(models.Model):
     # 1 booth has 1 manager
     manager = models.OneToOneField(BoothManager, on_delete=models.SET_DEFAULT, default=0)
 
+    def __str__(self):
+        return f"Booth : {self.name}"
 
 ###############################################################
 #               Vehicle Status

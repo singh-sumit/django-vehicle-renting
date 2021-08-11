@@ -1,6 +1,73 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Home{% endblock title %}
 
 {% block main %}
-This is main content from home.html
+    This is main content from home.html
+    <hr>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <!-- List of Available Vehicles -->
+                <ul class="list-group">
+                    <li class="list-group-item text-center text-primary font-weight-bold">Available Vehicles</li>
+                    {% for vehicle in available_vehicles %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ vehicle.name }}
+                            <span class="badge bg-primary rounded-pill text-white">{{ vehicle.count }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            No Vehicles Available
+                            <span class="badge rounded-pill bg-danger">0</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <!-- End of list of Available Vehicles-->
+            </div>
+            <div class="col-md-10">
+                <div class="row">
+                    {# start of vehicle card slide show #}
+                    {% for vehicle in vehicle_lists %}
+                        <div class="col-md-4">
+                            <div class="card">
+                                <img src="{% if vehicle.bike %}
+                                            {{ vehicle.bike.image.url }}
+                                           {% else %}
+                                            {{ vehicle.car.image.url }}
+                                           {% endif %}"
+                                     alt="..." class="img-fluid">
+                                <div class="card-body">
+                                    <h5 class="card-title"></h5>
+                                    <p class="card-text">
+                                        {% if vehicle.bike %}
+                                            {{ vehicle.bike.type }}
+                                        {% else %}
+                                            {{ vehicle.car.type }}
+                                        {% endif %}
+                                        <br>
+                                        Brand : {{ vehicle.brand }} <br>
+                                        Fare : <i class='fas fa-rupee-sign text-danger'></i> {{ vehicle.fare }} per day
+                                        <br>
+                                        Manufacturing Year : <i
+                                            class="far fa-calendar-alt"></i> {{ vehicle.manufacturing_year }} <br>
+                                        Residing Booth : <i
+                                            class="fas fa-map-marker-alt"></i> {{ vehicle.residing_booth.address }} <br>
+                                        Mileage : <i class="fas fa-tachometer-alt"></i> {{ vehicle.mileage }} kmpl<br>
+                                        Plate No. : <i class="far fa-keyboard"></i> {{ vehicle.plate_num }} <br>
+                                    </p>
+                                    <a href="#" class="btn btn-sm btn-primary">Request To Reserve</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="display-6">No Vehicles. Call System Administrator.</p>
+                    {% endfor %}
+                    {# end of vehicle card slide show #}
+                </div>
+
+            </div>
+        </div>
+    </div>
 {% endblock main %}
