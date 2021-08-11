@@ -28,7 +28,9 @@ class Booth(models.Model):
 #               Vehicle Status
 VEHICLE_STATUS = (
     ('AVAILABLE', 'AVAILABLE'),
-    ('RESERVED', 'RESERVED')
+    ('REQUESTED', 'REQUESTED'),
+    ('RESERVED', 'RESERVED'),
+    ('OTHER', 'OTHER')
 )
 
 
