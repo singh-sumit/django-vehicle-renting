@@ -8,17 +8,13 @@
 </head>
 <body>
 <!-- Start of Nav Section -->
-<a href="{% url 'commons:admin-home' %}">Home</a> |
+<a href="{% url 'commons:csr-home' %}">Home</a> |
 {% if request.user.csr %}
     <a href="">{{ request.user.username }} >> Profile</a> |
-    <a href="{% url 'commons:add-booth' %}">Add Booth</a> |
+    <a href="{% url 'commons:csr-add-booth' %}">Add Booth</a> |
     <a href="">Update Booth</a> |
-    <a href="{% url 'commons:add-booth-mngr' %}">Add Booth Manager</a> |
+    <a href="{% url 'commons:csr-add-bmngr' %}">Add Booth Manager</a> |
     <a href="">Update Booth Manger</a> |
-    <a href="">Add Bike</a> |
-    <a href="">Update Bike</a> |
-    <a href="">Add Car</a> |
-    <a href="">Update Car</a> |
     <a href="{% url 'commons:logout' %}">Logout</a>  |
 {% else %}
     {% include '404.html' %}

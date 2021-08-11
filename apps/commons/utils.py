@@ -5,8 +5,6 @@ from django.utils import timezone
 ###################################################
 #               validte phone number
 import re
-
-
 def validate_phone(phone):
     if phone.isnumeric():
         # pattern : 9812345678
@@ -27,3 +25,9 @@ def age(dob):
         return today.year - dob.year - 1
     else:
         return today.year - dob.year
+
+#####################################################################
+#               Validate is provide text numeric
+def is_number(value):
+    if not value.isnumeric():
+        raise ValidationError("Must be integer.")

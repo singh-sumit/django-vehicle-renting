@@ -1,4 +1,4 @@
-{% extends 'csr/base.html' %}
+{% extends 'bmgr/base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -19,10 +19,10 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <form action="" method="POST">
+                            <form action="" method="POST" {% block setmultipart %}{% endblock %}>
                                 {% csrf_token %}
                                 {% crispy form %}
-                                {% block submit %}{% endblock submit %}
+{#                                {% block submit %}{% endblock submit %}#}
                             </form>
                         </div>
                     </div>

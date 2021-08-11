@@ -29,7 +29,8 @@ class Admin(models.Model):
 ##############################################################
 #           Owner of vehicle both Rentable and Bookable
 class Owner(SystemBaseUser):
-    pass
+    def __str__(self):
+        return f"Owner : {self.user.username}"
 
 #####################################################################
 #            Customer Service Representative of the System

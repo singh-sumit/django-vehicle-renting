@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLoginView, SystemAdminLoginView,
                     SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView,
-                    AddBoothManagerView, AddBoothView)
+                    AddBoothManagerView, AddBoothView, BoothManagerLoginView, BoothManagerAddBikeView,
+                    BoothManagerHomeView,BoothManagerPasswordUpdateView, BoothManagerAddCarView)
 
 app_name = 'commons'
 
@@ -23,8 +24,15 @@ urlpatterns = [
     path('csr/', CSRLoginView.as_view(), name="csr-signin"),
     path('csr/home/', CSRHomeView.as_view(), name="csr-home"),
     path('csr/pwd-update/<int:pk>/', CSRPasswordUpdateView.as_view(), name="csr-pwd-update"),
-    path('csr/booth-mngr/add/', AddBoothManagerView.as_view(), name="add-booth-mngr"),
-    path('csr/booth/add/', AddBoothView.as_view(), name="add-booth"),
+    path('csr/booth-mngr/add/', AddBoothManagerView.as_view(), name="csr-add-bmngr"),
+    path('csr/booth/add/', AddBoothView.as_view(), name="csr-add-booth"),
 
+    ###########################################################################
+    #           Booth Manager Part
+    path('bmgr/', BoothManagerLoginView.as_view(), name="bmgr-signin"),
+    path('bmgr/home/', BoothManagerHomeView.as_view(), name="bmgr-home"),
+    path('bmgr/pwd-update/<int:pk>/', BoothManagerPasswordUpdateView.as_view(), name="bmgr-pwd-update"),
+    path('bmgr/add/bike/', BoothManagerAddBikeView.as_view(), name="bmgr-add-bike"),
+    path('bmgr/add/car/', BoothManagerAddCarView.as_view(), name="bmgr-add-car"),
 
 ]

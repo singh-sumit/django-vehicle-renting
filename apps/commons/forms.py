@@ -1,12 +1,12 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Row, Submit
 from django import forms
-from django.forms import BaseModelForm, TextInput
+from django.forms import BaseModelForm, TextInput, IntegerField
 from .models import (Customer, Owner, CSR)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .utils import (age, )
-from ..vehicle_rental.models import BoothManager, Booth
+from ..vehicle_rental.models import BoothManager, Booth, Vehicle, Bike, Car
 
 
 ########################################################################################
@@ -179,9 +179,9 @@ class CSRRegistrationForm(forms.ModelForm):
         return BaseUserRegisterationForm.clean_email(self)
 
 
-####################################################################################
-#               CSR Password Update Form
-class CSRPasswordUpdateForm(forms.Form):
+################################################################################
+#           Base Password Update Form used by (CSR | Booth Manager)
+class PasswordUpdateForm(forms.Form):
     password1 = forms.CharField(widget=forms.PasswordInput(), label='New Password')
     password2 = forms.CharField(widget=forms.PasswordInput(), label='Confirm Password')
 
@@ -248,6 +248,7 @@ class BoothManagerAddForm(forms.ModelForm):
     def clean_email(self):
         return BaseUserRegisterationForm.clean_email(self)
 
+
 #############################################################################
 #           Form for adding Booth Office    <-- CSR
 class AddBoothForm(forms.ModelForm):
@@ -256,3 +257,73 @@ class AddBoothForm(forms.ModelForm):
         fields = "__all__"
 
 
+############################################################################
+#           Form for Adding Vehicle(Bike | Car)  <-- Booth Manager
+class BaseAddVehicleForm(forms.ModelForm):
+    # class Meta:
+    #     model = Vehicle
+    #     fields = ["plate_num", "owner", "fare", "brand", "mileage", "manufacturing_year"]
+    #     exclude = ["wheels_num", "status", "issued_by", "residing_booth", "vehicle_type"]
+    plate_num = forms.CharField(label="Plate Number", widget=forms.TextInput(),
+                                help_text='Plate number like : BDE1234', max_length=7)
+    fare = forms.CharField(widget=forms.NumberInput(), help_text='Enter a fare for per day')
+    brand = forms.CharField(widget=forms.TextInput())
+    mileage = forms.DecimalField()
+    manufacturing_year = forms.CharField(max_length=4, widget=forms.NumberInput())
+    seats = forms.CharField(widget=TextInput(), )
+    qs = tuple(Owner.objects.all().values_list("id", "user__username"))
+    owner = forms.ChoiceField(choices=qs)
+    image = forms.ImageField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('plate_num', css_class='form-group col-md-4 mb-0'),
+                Column('brand', css_class='form-group col-md-4 mb-0'),
+                Column('mileage', css_class='form-group col-md-2 mb-0'),
+                Column('seats', css_class='form-group col-md-2 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('fare', css_class='form-group col-md-4 mb-0'),
+                Column('manufacturing_year', css_class='form-group col-md-4 mb-0', ),
+                Column('owner', css_class='form-group col-md-4 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('image', css_class="form-group"),
+                css_class='form-row'
+            ),
+            Submit('submit', "Add", css_class='btn btn-primary mt-2')
+        )
+
+    #####################################################
+    #           cleaning fields
+    def clean_plate_num(self):
+        pnum = self.cleaned_data.get('plate_num')
+        # check for uniqueness of plate number
+        if Vehicle.objects.filter(plate_num=pnum).exists():
+            raise forms.ValidationError("Vehicle with plate number already exists.")
+        return pnum
+
+##############################################################################
+#           Form for Adding Bike  <-- Booth Manager
+class BoothManagerAddBikeForm(BaseAddVehicleForm):
+    class Meta:
+        model = Bike
+        fields = ["seats", "image", "plate_num", "fare", "brand", "mileage", "manufacturing_year"]
+        exclude = ["wheels_num", "status", "issued_by", "residing_booth", "vehicle_type"]
+
+    seats = forms.CharField(widget=TextInput(attrs={'value': 2}), )
+
+##############################################################################
+#           Form for Adding Car  <-- Booth Manager
+class BoothManagerAddCarForm(BaseAddVehicleForm):
+    class Meta:
+        model = Bike
+        fields = ["seats", "image", "plate_num", "fare", "brand", "mileage", "manufacturing_year"]
+        exclude = ["wheels_num", "status", "issued_by", "residing_booth", "vehicle_type"]
+
+    seats = forms.CharField(widget=TextInput(attrs={'value': 4}), )

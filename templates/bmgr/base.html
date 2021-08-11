@@ -8,17 +8,16 @@
 </head>
 <body>
 <!-- Start of Nav Section -->
-<a href="">Home</a> |
-{% if request.user.is_authenticated %}
+<a href="{% url 'commons:bmgr-home' %}">Home</a> |
+{% if request.user.boothmanager %}
     <a href="">{{ request.user.username }} >> Profile</a> |
+    <a href="{% url 'commons:bmgr-add-bike' %}">Add Bike</a> |
+    <a href="">Update Bike</a> |
+    <a href="{% url 'commons:bmgr-add-car' %}">Add Car</a> |
+    <a href="">Update Car</a> |
     <a href="{% url 'commons:logout' %}">Logout</a>  |
 {% else %}
-    <a href="{% url 'commons:owner_signin' %}">Owner Login</a> |
-    <a href="{% url 'commons:owner_signup' %}">Owner Register</a> |
-    <a href="{% url 'commons:customer_signup' %}">Customer Register</a>  |
-    <a href="{% url 'commons:csr-signin' %}">CSR Login</a>  |
-    <a href="{% url 'commons:bmgr-signin' %}">Booth Manager Login</a>  |
-
+    {% include '404.html' %}
 {% endif %}
 <hr>
 <!-- End of Nav Section -->
@@ -28,3 +27,4 @@
 {% endblock main %}
 </body>
 </html>
+
