@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.views.generic import (TemplateView, CreateView, FormView, View)
 from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
                     PasswordUpdateForm, BoothManagerAddForm, AddBoothForm, BoothManagerAddBikeForm,
-                    BoothManagerAddCarForm, )
+                    BoothManagerAddCarForm, MakeLicensedCustomerForm, )
 from .models import (Customer, Owner, Admin, CSR)
 from django.utils import timezone
 from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle
@@ -78,6 +78,32 @@ class CustomerRegisterView(CreateView):
     def form_invalid(self, form):
         return super().form_invalid(form)
 
+###############################################################
+#            Register As Licensed Customer
+class MakeLicensedCustomerView(FormView):
+    template_name = "customer/req_for_licensed.html"
+    form_class = MakeLicensedCustomerForm
+    success_url = reverse_lazy('commons:home')
+
+
+################################################################
+#           Licensed Customer Mixin
+class LicensedRequiredMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        # check if customer is logined and is licensed
+        if (request.user.is_authenticated) and \
+                (Customer.objects.filter(user=request.user).exists) and \
+                (request.user.customer.customertype.licensed):
+            pass
+        else:
+            # not logined user
+            return redirect("commons:cust-req-licensed")
+        return super().dispatch(request, *args, **kwargs)
+
+#############################################################################
+#               Customer Makes Reservation Request
+class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
+    pass
 
 ###############################################################
 #              Customer Login View
@@ -103,6 +129,7 @@ class CustomerLoginView(FormView):
     def form_invalid(self, form):
         return render(self.request, self.template_name,
                       {'form': form, 'error': 'Invalid Credentials.'})
+
 
 ################################################################
 #               Owner Register View

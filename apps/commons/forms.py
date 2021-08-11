@@ -2,7 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Row, Submit
 from django import forms
 from django.forms import BaseModelForm, TextInput, IntegerField
-from .models import (Customer, Owner, CSR)
+from .models import (Customer, Owner, CSR, CustomerType)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .utils import (age, )
@@ -114,6 +114,13 @@ class CustomerRegisterationForm(BaseUserRegisterationForm):
         if age(udob) < 18:
             raise forms.ValidationError("Your age must be greater than 18 years.")
         return udob
+
+#####################################################################################
+#               Make Licensed Customer Form
+class MakeLicensedCustomerForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ["license_doc"]
 
 
 ######################################################################################

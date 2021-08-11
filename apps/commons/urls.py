@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLoginView, SystemAdminLoginView,
                     SystemAdminHomeView, UserLogoutView, AddCSRView, CSRLoginView, CSRHomeView, CSRPasswordUpdateView,
                     AddBoothManagerView, AddBoothView, BoothManagerLoginView, BoothManagerAddBikeView,
-                    BoothManagerHomeView, BoothManagerPasswordUpdateView, BoothManagerAddCarView, CustomerLoginView)
+                    BoothManagerHomeView, BoothManagerPasswordUpdateView, BoothManagerAddCarView, CustomerLoginView,
+                    MakeLicensedCustomerView)
 
 app_name = 'commons'
 
@@ -13,6 +14,8 @@ urlpatterns = [
     #                           Customer Part
     path('cust-signup/', CustomerRegisterView.as_view(), name="cust_signup"),
     path('cust-signin/', CustomerLoginView.as_view(), name="cust_signin"),
+    path('cust-req-licensed/', MakeLicensedCustomerView.as_view(), name="cust-req-licensed"),
+    path('cust-req-reserv/', MakeLicensedCustomerView.as_view(), name="cust-req-reserv"),
 
     ###########################################################################
     #                   Vehicle Owner Part

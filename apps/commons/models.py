@@ -5,6 +5,13 @@ from django.core.validators import MinLengthValidator
 
 
 # Create your models here.
+#########################################################################
+#               Notification for Each User
+class Notification(models.Model):
+    # each user will have many Notification with them
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField(help_text="Enter notification message here.")
+
 ########################################################################
 #           Detail for Each User
 class SystemBaseUser(models.Model):
@@ -46,7 +53,7 @@ class CSR(SystemBaseUser):
 class Customer(SystemBaseUser):
     dob = models.DateField()
     # license document provided
-    license_doc = models.ImageField(upload_to='licenses', null=True, blank=True)
+    license_doc = models.ImageField(upload_to='customer/licenses', null=True, blank=True)
 
 
 
