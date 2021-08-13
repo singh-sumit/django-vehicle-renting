@@ -1,0 +1,29 @@
+{% extends 'csr/base.html' %}
+
+{% block page_operation %}
+    Manage Pending License Request
+{% endblock page_operation %}
+
+{% block main %}
+    <div class="container">
+        <div class="row">
+            <div class="col-2">
+                <div class="list-group" id="list-tab" role="tablist">
+                    {% for customer in object_list %}
+                        <a class="list-group-item list-group-item-action" id="list-{{ customer.id }}"
+                           href="{% url 'commons:csr-cust-detail' customer.id %}" >
+                        #{{ customer.id }}_{{ customer.user.username }}
+                        </a>
+                    {% empty %}
+                        <a class="list-group-item list-group-item-action" id="list-profile-list" data-toggle="list"
+                           href="#list-profile" role="tab" aria-controls="profile">Profile</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-10">
+                {% block view_particular %}{% endblock %}
+
+            </div>
+        </div>
+    </div>
+{% endblock main %}

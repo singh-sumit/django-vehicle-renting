@@ -1,12 +1,13 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
-from django.views.generic import (TemplateView, CreateView, FormView, View)
+from django.views.generic import (TemplateView, CreateView, FormView, View, UpdateView, ListView)
 from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
                     PasswordUpdateForm, BoothManagerAddForm, AddBoothForm, BoothManagerAddBikeForm,
                     BoothManagerAddCarForm, MakeLicensedCustomerForm, )
-from .models import (Customer, Owner, Admin, CSR)
+from .models import (Customer, Owner, Admin, CSR, Notification, CustomerType)
 from django.utils import timezone
 from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle
 
@@ -32,7 +33,12 @@ class HomeView(TemplateView):
             {'name': veh.__name__, 'count': veh.objects.filter(vehicle__status="AVAILABLE").count()}
             for veh in vehicles
         ]
-        print(context)
+
+        # add notifications to context
+        if (self.request.user.is_authenticated) and (self.request.user.customer):
+            notifications = Notification.objects.filter(user__id=self.request.user.id)
+            context['notifications'] = notifications.order_by("-id")[:5]
+            context['notifications_count'] = len(notifications)
         return context
 
 
@@ -78,12 +84,48 @@ class CustomerRegisterView(CreateView):
     def form_invalid(self, form):
         return super().form_invalid(form)
 
+
 ###############################################################
 #            Register As Licensed Customer
-class MakeLicensedCustomerView(FormView):
+class MakeLicensedCustomerView(UpdateView):
     template_name = "customer/req_for_licensed.html"
     form_class = MakeLicensedCustomerForm
     success_url = reverse_lazy('commons:home')
+
+    def get_queryset(self):
+        cid = self.kwargs['pk']
+        qs = Customer.objects.all()
+        return qs
+
+    def form_valid(self, form):
+        # save license doc to db
+        license_doc = form.cleaned_data.get("license_doc")
+        customer = self.request.user.customer
+
+        # rename as "license_<customer_id>.<ext>"
+        if license_doc:
+            license_doc.name = "license_{}_{}.{}".format(self.request.user.username, self.request.user.customer.id,
+                                                         license_doc.name.split('.')[-1])
+            customer.license_doc = license_doc
+            customer.save()
+
+            # Make notification for customer
+            customer.user.notification_set.create(
+                message="It requires some time to validate your request; for being licensed customer.")
+
+            # Send notification for all CSR
+            csrs = CSR.objects.all()
+            for csr in csrs:
+                csr.user.notification_set.create(message="Licensing Request Pending.")
+        else:
+            # save form while clearing existing photo
+            form.save()
+
+        # Make customer to redirect to its home
+        return redirect(self.success_url, {})
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
 
 ################################################################
@@ -91,19 +133,21 @@ class MakeLicensedCustomerView(FormView):
 class LicensedRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
         # check if customer is logined and is licensed
-        if (request.user.is_authenticated) and \
-                (Customer.objects.filter(user=request.user).exists) and \
-                (request.user.customer.customertype.licensed):
-            pass
-        else:
-            # not logined user
-            return redirect("commons:cust-req-licensed")
-        return super().dispatch(request, *args, **kwargs)
+        if (request.user.is_authenticated) and (Customer.objects.filter(user=request.user).exists):
+            try:
+                request.user.customer.customertype.licensed
+                return super().dispatch(request, *args, **kwargs)
+            except Exception as e:
+                print("My error >>>", e)
+        # not logined user
+        return redirect("commons:cust-req-licensed", pk=request.user.customer.id)
+
 
 #############################################################################
 #               Customer Makes Reservation Request
 class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
     pass
+
 
 ###############################################################
 #              Customer Login View
@@ -255,6 +299,68 @@ class CSRPasswordUpdateView(FormView):
 #                   CSR Home View
 class CSRHomeView(TemplateView):
     template_name = "csr/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # add notifications objects to context
+        if (self.request.user.is_authenticated) and (self.request.user.csr):
+            notifications = Notification.objects.filter(user__id=self.request.user.id)
+            context['notifications'] = notifications
+            context['notifications_count'] = len(notifications)
+        # print(">>>>>>", context)
+        return context
+
+
+#######################################################################
+#           Pending Licensing Request <-- CSR
+class ListPendingLicenseRequestView(ListView):
+    template_name = "csr/license_mgmt/base.html"
+
+    def get_queryset(self):
+        reqd_cust = list(CustomerType.objects.values_list('customer_id', flat=True))
+        # exclude registered customer and (customer with license_doc=null)
+        customers = Customer.objects.exclude(Q(id__in=reqd_cust) | Q(license_doc="") | Q(license_doc__isnull=True))
+        return customers
+        # print(">>>>>>>>>>",requesting_customer)
+        # return requesting_customer
+
+
+######################################################################
+#           View Particular Customer detail     <-- CSR
+class CSRCustomerDetailView(TemplateView):
+    template_name = "csr/license_mgmt/check_for_verification.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        csid = kwargs.get('pk')
+        context['cust'] = Customer.objects.get(id=csid)
+        print(context)
+        return context
+
+
+#######################################################################
+#        Manage LicenseRequest View   <-- CSR (Approve/Decline)
+class ManageLicenseRequestView(View):
+
+    def get(self, request, *args, **kwargs):
+        csrid = self.request.user.csr.id
+        cust_id = self.kwargs.get('cid')
+        action = request.GET['action']
+        cust = Customer.objects.get(id=cust_id)
+
+        # either approve or decline
+        if action == "aprov":
+            CustomerType.objects.create(licensed=True, customer_id=cust_id, verifier_id=csrid)
+            Notification.objects.create(user_id=cust.user.id,
+                                        message="You are now a licensed Customer.Begin Reserving...")
+        else:
+            # decline
+            cust.license_doc = None
+            cust.save()
+            Notification.objects.create(user_id=cust.user.id,
+                                        message="Provide valid identity.Retry, Latter.")
+
+        return redirect(reverse_lazy('commons:csr-list-lic-req'))
 
 
 #######################################################################
