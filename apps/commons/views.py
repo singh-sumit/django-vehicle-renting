@@ -139,14 +139,18 @@ class LicensedRequiredMixin(object):
                 return super().dispatch(request, *args, **kwargs)
             except Exception as e:
                 print("My error >>>", e)
-        # not logined user
-        return redirect("commons:cust-req-licensed", pk=request.user.customer.id)
+                return redirect("commons:cust-req-licensed", pk=request.user.customer.id)
+        else:
+            # not logined user
+            return redirect("commons:cust_signup", )
+
+
 
 
 #############################################################################
 #               Customer Makes Reservation Request
 class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
-    pass
+    template_name = "404.html"
 
 
 ###############################################################
