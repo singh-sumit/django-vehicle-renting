@@ -4,7 +4,9 @@ from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLogi
                     AddBoothManagerView, AddBoothView, BoothManagerLoginView, BoothManagerAddBikeView,
                     BoothManagerHomeView, BoothManagerPasswordUpdateView, BoothManagerAddCarView, CustomerLoginView,
                     MakeLicensedCustomerView, MakeReservationRequestView, ListPendingLicenseRequestView,
-                    CSRCustomerDetailView, ManageLicenseRequestView)
+                    CSRCustomerDetailView, ManageLicenseRequestView, make_reserv_request,
+                    BoothManagerListReserveRequestView, ProcessReservationRequestView,
+                    BoothManagerListAllReserveRequestView)
 
 app_name = 'commons'
 
@@ -16,7 +18,8 @@ urlpatterns = [
     path('cust-signup/', CustomerRegisterView.as_view(), name="cust_signup"),
     path('cust-signin/', CustomerLoginView.as_view(), name="cust_signin"),
     path('cust-req-licensed/<int:pk>/', MakeLicensedCustomerView.as_view(), name="cust-req-licensed"),
-    path('cust-req-reserv/', MakeReservationRequestView.as_view(), name="cust-req-reserv"),
+    path('cust-req-reserv/<int:vid>/', MakeReservationRequestView.as_view(), name="cust-req-reserv"),
+    path('req-reserv/<int:vid>/', make_reserv_request, name="cust-f-req-reserv"),
 
     ###########################################################################
     #                   Vehicle Owner Part
@@ -46,5 +49,8 @@ urlpatterns = [
     path('bmgr/pwd-update/<int:pk>/', BoothManagerPasswordUpdateView.as_view(), name="bmgr-pwd-update"),
     path('bmgr/add/bike/', BoothManagerAddBikeView.as_view(), name="bmgr-add-bike"),
     path('bmgr/add/car/', BoothManagerAddCarView.as_view(), name="bmgr-add-car"),
+    path('bmgr/list-reserv-req/', BoothManagerListReserveRequestView.as_view(), name="bmgr-list-reserv-req"),
+    path('bmgr/proces-reserv-req/<int:req_id>/', ProcessReservationRequestView.as_view(), name="bmgr-proces-reserv-req"),
+    path('bmgr/all-reserv-req/', BoothManagerListAllReserveRequestView.as_view(), name="bmgr-all-reserv-req"),
 
 ]

@@ -1,15 +1,18 @@
+from datetime import timedelta
+
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
-from django.views.generic import (TemplateView, CreateView, FormView, View, UpdateView, ListView)
+from django.views.generic import (TemplateView, CreateView, FormView, View, UpdateView, ListView, RedirectView)
 from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
                     PasswordUpdateForm, BoothManagerAddForm, AddBoothForm, BoothManagerAddBikeForm,
                     BoothManagerAddCarForm, MakeLicensedCustomerForm, )
 from .models import (Customer, Owner, Admin, CSR, Notification, CustomerType)
 from django.utils import timezone
-from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle
+from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle, ReservationRequest, VEHICLE_STATUS, \
+    RESERVATION_STATUS, Reservation
 
 
 # Create your views here.
@@ -145,12 +148,36 @@ class LicensedRequiredMixin(object):
             return redirect("commons:cust_signup", )
 
 
+def make_reserv_request(request, *args, **kwargs):
+    cust = request.user.customer
+    vhid = kwargs['vid']
+    period = request.POST['period']
+
+    rr = ReservationRequest.objects.create(reserv_period=period, customer=cust, vehicle_id=vhid)
+
+    Notification.objects.create(message=f"Reservation Request Successful.#REQUEST{rr.id}", user_id=cust.user.id)
+
+    # change vehicle status to REQUESTED when three customer request the same vehicle at a same day
+    veh = Vehicle.objects.get(id=vhid)
+    veh.status = VEHICLE_STATUS[1][1]
+    veh.save()
+    return redirect('commons:home')
 
 
 #############################################################################
 #               Customer Makes Reservation Request
 class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
-    template_name = "404.html"
+    template_name = "customer/reserve_date.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # add notifications to context
+        if (self.request.user.is_authenticated) and (self.request.user.customer):
+            notifications = Notification.objects.filter(user__id=self.request.user.id)
+            context['notifications'] = notifications.order_by("-id")[:5]
+            context['notifications_count'] = len(notifications)
+        return context
 
 
 ###############################################################
@@ -309,7 +336,7 @@ class CSRHomeView(TemplateView):
         # add notifications objects to context
         if (self.request.user.is_authenticated) and (self.request.user.csr):
             notifications = Notification.objects.filter(user__id=self.request.user.id)
-            context['notifications'] = notifications
+            context['notifications'] = notifications.order_by("-id")[:10]
             context['notifications_count'] = len(notifications)
         # print(">>>>>>", context)
         return context
@@ -539,6 +566,90 @@ class BoothManagerAddCarView(CreateView):
 
     def form_invalid(self, form):
         return super().form_invalid(form)
+
+
+########################################################################
+#          Pending ListReserveRequest <-- BoothManager
+class BoothManagerListReserveRequestView(ListView):
+    template_name = "bmgr/manage_reserv/list_reserv_req.html"
+
+    def get_queryset(self):
+        # bmgr id
+        bmgr = self.request.user.boothmanager
+        booth = bmgr.booth
+        vreq = Vehicle.objects.filter(residing_booth=booth, status="REQUESTED")
+        dates = [timezone.now().date(), (timezone.now() + timedelta(days=-1)).date()]
+        reserv_req = ReservationRequest.objects.filter(vehicle__in=vreq, status="INPROGRESS",
+                                                       requested_date__in=dates)
+
+        ################################################
+        # make other vehicle Available which has been requested but reservation request is still Inprogrees, and date is 2 days back.
+        yesterday = (timezone.now() - timedelta(days=1)).date()
+        left_reserv_req = ReservationRequest.objects.filter(requested_date__lt=yesterday, status="INPROGRESS")
+        for lrreq in left_reserv_req:
+            lrreq.vehicle.status = VEHICLE_STATUS[0][1]  # AVAILABLE
+            lrreq.vehicle.save()
+            lrreq.status = RESERVATION_STATUS[3][1]  # CANCELED
+            lrreq.save()
+            Notification.objects.create(user_id=lrreq.customer.user_id,
+                                        message=f"#Reserve_ID{lrreq.id}: Your request is cancelled.Because you didn't take vehicle in time.")
+        return reserv_req
+
+
+######################################################################################
+#            List All Reserve Request    <-- BoothManager
+class BoothManagerListAllReserveRequestView(ListView):
+    template_name = "bmgr/manage_reserv/all_requests.html"
+
+    def get_queryset(self):
+        # bmgr id
+        bmgr = self.request.user.boothmanager
+        booth = bmgr.booth
+        vreq = Vehicle.objects.filter(residing_booth=booth)
+        reserv_req = ReservationRequest.objects.filter(vehicle__in=vreq).order_by("-requested_date")
+        return reserv_req
+
+
+########################################################################
+#           Grant or Reject Reservation Request <-- BoothManager
+class ProcessReservationRequestView(View):
+
+    def get(self, request, *args, **kwargs):
+        bm = self.request.user.boothmanager
+        req_id = self.kwargs['req_id']
+        action = self.request.GET['action']
+        reserv_req = ReservationRequest.objects.get(id=req_id)
+        cust = reserv_req.customer
+        veh = reserv_req.vehicle
+
+        if action == "grant":
+            reserv_req.status = RESERVATION_STATUS[1][1]  # GRANTED
+            reserv_req.save()
+            veh.status = VEHICLE_STATUS[2][1]  # RESERVED
+            veh.save()
+
+            exp_return_date = timezone.now() + timedelta(days=reserv_req.reserv_period)
+            initial_payment = veh.fare * reserv_req.reserv_period
+            reserved = Reservation.objects.create(reservation_request=reserv_req, borrow_approver=bm,
+                                                  expected_return_date=exp_return_date, pre_payment=initial_payment,
+                                                  total=initial_payment, )
+            # provide notification to customer
+            Notification.objects.create(user_id=cust.user.id,
+                                        message=f"#Reserve_ID{reserved.id}: Your are requested to return vehicle at nearest booth by {reserved.expected_return_date}")
+
+        else:
+            # deny request
+            reserv_req.status = RESERVATION_STATUS[2][1]  # DENIED
+            reserv_req.save()
+
+            # make veh status to AVAILABLE
+            veh.status = VEHICLE_STATUS[0][1]
+            veh.save()
+
+            # provide notification to customer
+            Notification.objects.create(user_id=cust.user.id,
+                                        message=f"#ReserveRequest_ID{reserv_req.id}: Sorry! Your request is denied "
+                                                f"because of sudden vehicle damage. Your are requested to reserve other vehicle.")
 
 
 ########################################################################3

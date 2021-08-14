@@ -57,6 +57,7 @@ class Customer(SystemBaseUser):
 
 
 
+
 ########################################################################
 #                   Distinguish Customer is Normal or Licensed Customer
 class CustomerType(models.Model):
