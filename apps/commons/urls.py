@@ -6,7 +6,8 @@ from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLogi
                     MakeLicensedCustomerView, MakeReservationRequestView, ListPendingLicenseRequestView,
                     CSRCustomerDetailView, ManageLicenseRequestView, make_reserv_request,
                     BoothManagerListReserveRequestView, ProcessReservationRequestView,
-                    BoothManagerListAllReserveRequestView)
+                    BoothManagerListAllReserveRequestView, SearchReservationRequestView, ShowResultView,
+                    BoothManagerReturnReserveVehicleView)
 
 app_name = 'commons'
 
@@ -50,7 +51,11 @@ urlpatterns = [
     path('bmgr/add/bike/', BoothManagerAddBikeView.as_view(), name="bmgr-add-bike"),
     path('bmgr/add/car/', BoothManagerAddCarView.as_view(), name="bmgr-add-car"),
     path('bmgr/list-reserv-req/', BoothManagerListReserveRequestView.as_view(), name="bmgr-list-reserv-req"),
-    path('bmgr/proces-reserv-req/<int:req_id>/', ProcessReservationRequestView.as_view(), name="bmgr-proces-reserv-req"),
+    path('bmgr/proces-reserv-req/<int:req_id>/', ProcessReservationRequestView.as_view(),
+         name="bmgr-proces-reserv-req"),
     path('bmgr/all-reserv-req/', BoothManagerListAllReserveRequestView.as_view(), name="bmgr-all-reserv-req"),
+    path('bmgr/search-reserv-req/', SearchReservationRequestView.as_view(), name="bmgr-search-reserv-req"),
+    path('bmgr/view-reserv-req/<int:reserv_id>/', ShowResultView.as_view(), name="bmgr-view-reserv-req"),
+    path('bmgr/return-reserv-veh/<int:reserv_id>/', BoothManagerReturnReserveVehicleView.as_view(), name="bmgr-return-reserv-veh"),
 
 ]

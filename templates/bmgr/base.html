@@ -35,7 +35,7 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
         <!-- Sidebar - Brand -->
-        <a class="sidebar-brand bg-light d-flex align-items-center justify-content-center" href="{% url 'commons:csr-home' %}">
+        <a class="sidebar-brand bg-light d-flex align-items-center justify-content-center" href="{% url 'commons:bmgr-home' %}">
             <div class="sidebar-brand-text mx-3">
                 <img src="{% static 'logos/logo1.png' %}" class="img-fluid">
             </div>
@@ -103,7 +103,24 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" href="{% url 'commons:bmgr-list-reserv-req' %}">List Requests</a>
                     <a class="collapse-item" href="{% url 'commons:bmgr-all-reserv-req' %}">All Requests</a>
+                    <a class="collapse-item" href="{% url 'commons:bmgr-search-reserv-req' %}">Manage Return Vehicle</a>
                     <a class="collapse-item" href="utilities-other.html">Other</a>
+                </div>
+            </div>
+        </li>
+
+        <!-- Nav Item - List Reserve Request Collapse Menu -->
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReturnReservation"
+               aria-expanded="true" aria-controls="collapseReturnReservation">
+                <i class="fas fa-fw fa-terminal"></i>
+                <span>Manage Return Vehicle</span>
+            </a>
+            <div id="collapseReturnReservation" class="collapse" aria-labelledby="headingReturnReservation"
+                 data-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <a class="collapse-item" href="{% url 'commons:bmgr-search-reserv-req' %}">Manage Return Vehicle</a>
+                    <a class="collapse-item" href="{% url 'commons:bmgr-list-reserv-req' %}">List Requests</a>
                 </div>
             </div>
         </li>

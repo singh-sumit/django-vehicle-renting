@@ -92,6 +92,7 @@ RESERVATION_STATUS = (
     ('GRANTED', 'GRANTED'),  # granted by booth Manager
     ('DENIED', 'DENIED'),  # denied by Booth manager
     ('CANCELLED', 'CANCELLED'),  # cancelled by customer
+    ('COMPLETED', 'COMPLETED')
 )
 
 

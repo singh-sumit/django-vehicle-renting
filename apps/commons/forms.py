@@ -334,3 +334,22 @@ class BoothManagerAddCarForm(BaseAddVehicleForm):
         exclude = ["wheels_num", "status", "issued_by", "residing_booth", "vehicle_type"]
 
     seats = forms.CharField(widget=TextInput(attrs={'value': 4}), )
+
+####################################################################################
+#           Form for Searching Reserved Vehicle <-- Booth Manager
+class BoothManagerSearchReservedVehicleForm(forms.Form):
+    reservation_id = forms.CharField(widget=forms.NumberInput(), help_text="Reservation Id: like Reserve_ID4")
+    cust_name = forms.CharField(max_length=40,required=False,label="Customer Name")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('reservation_id', css_class='form-group '),
+                Column('cust_name', css_class='form-group ',),
+                css_class='form-row'
+            ),
+        )
+
+

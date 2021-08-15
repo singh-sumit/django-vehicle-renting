@@ -1,0 +1,33 @@
+{% extends 'bmgr/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Manage Return of Vehicle{% endblock title %}
+
+{% block page_operation %}
+    Manage Returned Vehicle
+{% endblock page_operation %}
+
+{% block main %}
+
+    <!-- Search Bar -->
+    <div class="container">
+        <form method="POST">
+            {% csrf_token %}
+            {% if error %}
+                <small class="text-danger">{{ error }}</small>
+            {% endif %}
+            <div class="row">
+                <div class="col-md-8">
+                    {% crispy form %}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn-circle btn-outline-success m-4"><i class="fas fa-search fa-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+    <!-- end of search bar -->
+
+{% endblock main %}

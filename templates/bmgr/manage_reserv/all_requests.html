@@ -3,14 +3,14 @@
 {% block title %}Manage All Reserve Request | Booth Manager{% endblock title %}
 
 {% block page_operation %}
-Manage All Reserve Request
+    Manage All Reserve Request
 {% endblock page_operation %}
 {% block main %}
 
     <!-- Begin Page Content -->
     <div class="container-fluid">
 
-       <!-- DataTales Example -->
+        <!-- DataTales Example -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">All Reserve Request</h6>
@@ -28,7 +28,7 @@ Manage All Reserve Request
                             <th>Vehicle Id</th>
                             <th>Borrow Date</th>
                             <th>Expected Return Date</th>
-{#                            <th>Returned Date</th>#}
+                            {#                            <th>Returned Date</th>#}
                             <th>Initial Payment Recieved</th>
                             <th>Fine</th>
                             <th>Total</th>
@@ -38,28 +38,30 @@ Manage All Reserve Request
                         <tbody>
 
                         {% for vreq in object_list %}
-                        <tr>
-                            <td>#Request_{{ vreq.id }}</td>
-                            <td>{{ vreq.requested_date }}</td>
-                            {% if vreq.status == 'INPROGRESS' %}
-                            <td class="badge badge-info badge-pill mt-2">{{ vreq.status }}</td>
-                            {% elif vreq.status == 'GRANTED' %}
-                                <td class="badge badge-success badge-pill mt-2">{{ vreq.status }}</td>
-                            {% elif vreq.status == 'DENIED' %}
-                                <td class="badge badge-danger badge-pill mt-2">{{ vreq.status }}</td>
-                            {% elif vreq.status == 'CANCELLED' %}
-                                <td class="badge badge-warning badge-pill mt-2">{{ vreq.status }}</td>
-                            {% endif %}
-                            <td>{{ vreq.reserv_period }}</td>
-                            <td>{{ vreq.customer.user.username }}</td>
-                            <td>{{ vreq.vehicle_id }}</td>
-                            <td>{{ vreq.reservation.borrow_date }}</td>
-                            <td>{{ vreq.reservation.expected_return_date }}</td>
-{#                            <td>{{ vreq.reservation.return_date }}</td>#}
-                            <td class="text-success font-weight-bold">{{ vreq.reservation.pre_payment }}</td>
-                            <td class="text-danger font-weight-bold">{{ vreq.reservation.fine }}</td>
-                            <td class="text-primary font-weight-bold">{{ vreq.reservation.total }}</td>
-                        </tr>
+                            <tr>
+                                <td>#Request_{{ vreq.id }}</td>
+                                <td>{{ vreq.requested_date }}</td>
+                                {% if vreq.status == 'INPROGRESS' %}
+                                    <td class="badge badge-info badge-pill mt-2">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'GRANTED' %}
+                                    <td class="badge badge-success badge-pill mt-2">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'DENIED' %}
+                                    <td class="badge badge-danger badge-pill mt-2">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'COMPLETED' %}
+                                    <td class="badge badge-primary badge-pill mt-2">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'CANCELLED' %}
+                                    <td class="badge badge-warning badge-pill mt-2">{{ vreq.status }}</td>
+                                {% endif %}
+                                <td>{{ vreq.reserv_period }}</td>
+                                <td>{{ vreq.customer.user.username }}</td>
+                                <td>{{ vreq.vehicle_id }}</td>
+                                <td>{{ vreq.reservation.borrow_date }}</td>
+                                <td>{{ vreq.reservation.expected_return_date }}</td>
+                                {#                            <td>{{ vreq.reservation.return_date }}</td>#}
+                                <td class="text-success font-weight-bold">{{ vreq.reservation.pre_payment }}</td>
+                                <td class="text-danger font-weight-bold">{{ vreq.reservation.fine }}</td>
+                                <td class="text-primary font-weight-bold">{{ vreq.reservation.total }}</td>
+                            </tr>
                         {% empty %}
                         {% endfor %}
 

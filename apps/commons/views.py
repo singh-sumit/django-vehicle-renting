@@ -5,10 +5,11 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
-from django.views.generic import (TemplateView, CreateView, FormView, View, UpdateView, ListView, RedirectView)
+from django.views.generic import (TemplateView, CreateView, FormView, View, UpdateView, ListView, RedirectView,
+                                  DetailView)
 from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLoginForm, CSRRegistrationForm,
                     PasswordUpdateForm, BoothManagerAddForm, AddBoothForm, BoothManagerAddBikeForm,
-                    BoothManagerAddCarForm, MakeLicensedCustomerForm, )
+                    BoothManagerAddCarForm, MakeLicensedCustomerForm, BoothManagerSearchReservedVehicleForm, )
 from .models import (Customer, Owner, Admin, CSR, Notification, CustomerType)
 from django.utils import timezone
 from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle, ReservationRequest, VEHICLE_STATUS, \
@@ -122,7 +123,8 @@ class MakeLicensedCustomerView(UpdateView):
                 csr.user.notification_set.create(message="Licensing Request Pending.")
         else:
             # save form while clearing existing photo
-            form.save()
+            # form.save()
+            pass
 
         # Make customer to redirect to its home
         return redirect(self.success_url, {})
@@ -497,6 +499,11 @@ class BoothManagerPasswordUpdateView(FormView):
 class BoothManagerHomeView(TemplateView):
     template_name = "bmgr/home.html"
 
+    def get_context_data(self, **kwargs):
+        context = self.get_context_data(**kwargs)
+
+        return context
+
 
 ##########################################################################
 #           Add Bike <-- BoothManager (in the name of Owner)
@@ -605,8 +612,9 @@ class BoothManagerListAllReserveRequestView(ListView):
         # bmgr id
         bmgr = self.request.user.boothmanager
         booth = bmgr.booth
-        vreq = Vehicle.objects.filter(residing_booth=booth)
-        reserv_req = ReservationRequest.objects.filter(vehicle__in=vreq).order_by("-requested_date")
+        # vreq = Vehicle.objects.filter(residing_booth=booth)
+        # reserv_req = ReservationRequest.objects.filter(vehicle__in=vreq).order_by("-requested_date")
+        reserv_req = ReservationRequest.objects.all().order_by("-requested_date")
         return reserv_req
 
 
@@ -650,6 +658,88 @@ class ProcessReservationRequestView(View):
             Notification.objects.create(user_id=cust.user.id,
                                         message=f"#ReserveRequest_ID{reserv_req.id}: Sorry! Your request is denied "
                                                 f"because of sudden vehicle damage. Your are requested to reserve other vehicle.")
+
+
+class ShowResultView(TemplateView):
+    template_name = "bmgr/manage_return_of_veh/view_result.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        reserv_id = kwargs['reserv_id']
+        reserv_req = Reservation.objects.get(id=reserv_id)
+        # calculate fine
+        date_diff = timezone.now().date() - reserv_req.expected_return_date
+        if date_diff.days > 0:
+            penalty = date_diff.days * reserv_req.reservation_request.vehicle.fare
+        else:
+            penalty = 0
+        context['reserv_req'] = reserv_req
+        context['extra_days'] = date_diff.days
+        context['penalty'] = penalty
+        context['payable'] = reserv_req.pre_payment + penalty
+        return context
+
+#######################################################################################################
+#     Search Reservation Request for Customer While Returning Vehicle     <-- BoothManager
+class SearchReservationRequestView(FormView):
+    template_name = "bmgr/manage_return_of_veh/search.html"
+    form_class = BoothManagerSearchReservedVehicleForm
+    success_url = reverse_lazy('commons:bmgr-view-reserv-req')
+
+    def form_valid(self, form):
+        reserv_id = form.cleaned_data.get('reservation_id')
+        cust_username = form.cleaned_data.get('cust_name')
+
+        try:
+            reserv_req = Reservation.objects.get(id=reserv_id)
+        except Exception:
+            return render(self.request, self.template_name,
+                          {'form': form, 'error': 'Enter proper Reserve Id and name'})
+
+        # else return to success url
+        return redirect(reverse_lazy('commons:bmgr-view-reserv-req', kwargs={'reserv_id':3, }))
+
+    def form_invalid(self, form):
+        return render(self.request, self.template_name,
+                      {'form': form, 'error': 'Enter proper Reserve Id and name'})
+
+
+###########################################################################################
+#           Return Reserve Vehicle View by Customer <-- Booth Manager
+class BoothManagerReturnReserveVehicleView(View):
+
+    def get(self, *args, **kwargs):
+        bm = self.request.user.boothmanager
+        reserv_id = kwargs['reserv_id']
+
+        reserv_req = Reservation.objects.get(id=reserv_id)
+        # calculate fine
+        date_diff = timezone.now().date() - reserv_req.expected_return_date
+        if date_diff.days > 0:
+            penalty = date_diff.days * reserv_req.reservation_request.vehicle.fare
+        else:
+            penalty = 0
+
+        # save fine to reservation table
+        reserv_req.fine = penalty
+        reserv_req.total = reserv_req.pre_payment + penalty
+        reserv_req.return_approver = bm
+        reserv_req.return_date = timezone.now()
+        reserv_req.save()
+
+        # make reservation request of customer to "COMPLETED"
+        reserv_req.reservation_request.status = RESERVATION_STATUS[4][1]            # COMPLETED
+        reserv_req.reservation_request.save()
+
+        # make vehicle AVAILABLE as well change residing booth location to current boothmanager's booth
+        reserv_req.reservation_request.vehicle.status = VEHICLE_STATUS[0][1]
+        reserv_req.reservation_request.vehicle.residing_booth = bm.booth
+        reserv_req.reservation_request.vehicle.save()
+
+        # send notification to customer saying vehicle returned successfully
+        Notification.objects.create(user_id=reserv_req.reservation_request.customer.user_id,
+                                    message=f"Successfully returned a vehicle with #Reserve_{reserv_req.id} to "
+                                            f"booth {bm.booth}")
 
 
 ########################################################################3
