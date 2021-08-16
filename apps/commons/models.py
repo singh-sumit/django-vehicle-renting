@@ -55,7 +55,8 @@ class Customer(SystemBaseUser):
     # license document provided
     license_doc = models.ImageField(upload_to='customer/licenses', null=True, blank=True)
 
-
+    def __str__(self):
+        return f"Customer : {self.user.username}"
 
 
 ########################################################################

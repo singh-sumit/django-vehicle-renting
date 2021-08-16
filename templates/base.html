@@ -4,45 +4,102 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock title %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <!-- Custom fonts for this template-->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link
+            href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+            rel="stylesheet">
+
     <!-- Custom styles for this template-->
     <link href="{% static 'css/sb-admin-2.css' %}" rel="stylesheet">
-<!-- Custom fonts for this template-->
-    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
-    <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
-          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"> -->
 </head>
 <body>
-<!-- Start of Nav Section -->
-<a href="">Home</a> |
-{% if request.user.is_authenticated %}
-    <a href="">{{ request.user.username }} >> Profile</a> |
-    <div class="dropdown" style="display: inline-block;">
-        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
-            Notification <span class="badge bg-primary rounded-pill text-white">{{ notifications_count }}</span>
-        </button>
-        <div class="dropdown-menu bg-warning text-white" aria-labelledby="dropdownMenuButton" style="width: 500px;overflow: auto;">
-            {% for notification in notifications %}
-            <a class="dropdown-item" href="#">
-                {{ notification.message }} #Notif_{{ notification.id }}
-            </a>
-            {% endfor %}
-        </div>
-    </div> |
-    <a href="{% url 'commons:logout' %}">Logout</a>  |
-{% else %}
-    <a href="{% url 'commons:owner_signin' %}">Owner Login</a> |
-    <a href="{% url 'commons:owner_signup' %}">Owner Register</a> |
-    <a href="{% url 'commons:cust_signup' %}">Customer Register</a>  |
-    <a href="{% url 'commons:cust_signin' %}">Customer Login</a>  |
-    <a href="{% url 'commons:csr-signin' %}">CSR Login</a>  |
-    <a href="{% url 'commons:bmgr-signin' %}">Booth Manager Login</a>  |
+<!-- Start Nav Section -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <a class="navbar-brand" href="{% url 'commons:home' %}">
+        <img src="{% static 'logos/logo1.png' %}" class="img-fluid" width="120px">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-{% endif %}
-<hr>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            {% if not request.user.is_authenticated %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'commons:home' %}">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'commons:cust_signup' %}">Customer Register</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'commons:owner_signup' %}">Owner Register</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'commons:cust_signin' %}">
+                        LogIn
+                        <i class="fas fa-sign-in-alt"></i>
+                    </a>
+                </li>
+            {% elif request.user.customer %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'commons:home' %}">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-user"></i>
+                        {{ request.user.customer }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'commons:cust-view-all-reserv' %}">
+                       <i class="fas fa-glasses"></i>
+                        View All Reserves
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'commons:logout' %}">
+                        Logout  <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </li>
+                <!-- Nav Item - Notifications -->
+                <li class="nav-item dropdown no-arrow">
+                    <a class="nav-link dropdown-toggle btn btn-sm btn-outline-light border-0" href="#"
+                       id="alertsDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {#                    <i class="fas fa-bell fa-fw"></i>#}
+                        Notification <span
+                            class="badge badge-info badge-counter">{{ notifications_count }}</span>
+                        <!-- Counter - Alerts -->
+                    </a>
+                    <!-- Dropdown - Notifications -->
+                    <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                         aria-labelledby="alertsDropdown" style="margin-right: -500px;">
+                        <h6 class="dropdown-header">
+                            Alerts Center
+                        </h6>
+                        {% for notification in notifications %}
+                            <a class="dropdown-item d-flex align-items-center" href="#">
+                                <div>
+                            <span class="font-weight-bold">
+                                {{ notification.message }} #Notif_{{ notification.id }}
+                            </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+
+                        <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
+                    </div>
+                </li>
+
+            {% endif %}
+        </ul>
+
+    </div>
+</nav>
 <!-- End of Nav Section -->
+
 <main>
     {% block main %}
 
@@ -50,15 +107,22 @@
 </main>
 
 <!-- Js -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
-        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"
-        integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF"
-        crossorigin="anonymous"></script>
+<!-- Bootstrap core JavaScript-->
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+<!-- Page level plugins -->
+<script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+
+<!-- Page level custom scripts -->
+<script src="{% static 'js/demo/chart-area-demo.js' %}"></script>
+<script src="{% static 'js/demo/chart-pie-demo.js' %}"></script>
 
 {% block js %}
 {% endblock js %}

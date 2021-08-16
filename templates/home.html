@@ -3,7 +3,15 @@
 {% block title %}Home{% endblock title %}
 
 {% block main %}
-    This is main content from home.html
+    <div class="container-fluid align-center" style="height: 400px">
+        <div class="row">
+            <div class="col-md-6 mx-auto mt-3">
+                <img src="{% static 'img/banner.gif' %}" alt="car-picture" class="img-fluid"
+                     style="border-radius: 10px; border: 1px solid gray;">
+            </div>
+        </div>
+    </div>
+    <h4 class="text-dark font-weight-bolder text-center">Rent and Ride It takes no time...</h4>
     <hr>
 
     <div class="container-fluid">
@@ -54,16 +62,19 @@
                                             class="far fa-calendar-alt"></i> {{ vehicle.manufacturing_year }} <br>
                                         Residing Booth : <i
                                             class="fas fa-map-marker-alt"></i> {{ vehicle.residing_booth.address }} <br>
+                                        Booth : <i
+                                            class="fas fa-map-marker-alt"></i> {{ vehicle.residing_booth.name }} <br>
                                         Mileage : <i class="fas fa-tachometer-alt"></i> {{ vehicle.mileage }} kmpl<br>
                                         Plate No. : <i class="far fa-keyboard"></i> {{ vehicle.plate_num }} <br>
                                     </p>
 
-                                    <a href="{% url 'commons:cust-req-reserv' vehicle.id %}" class="btn btn-sm btn-primary">Request To Reserve</a>
+                                    <a href="{% url 'commons:cust-req-reserv' vehicle.id %}"
+                                       class="btn btn-sm btn-primary">Request To Reserve</a>
                                 </div>
                             </div>
                         </div>
                     {% empty %}
-                        <p class="display-6">No Vehicles. Call System Administrator.</p>
+                        <p class="text-black-50 display-4">No Vehicles. Call System Administrator.</p>
                     {% endfor %}
                     {# end of vehicle card slide show #}
                 </div>

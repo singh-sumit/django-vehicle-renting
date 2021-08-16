@@ -4,7 +4,7 @@ from .views import (HomeView, CustomerRegisterView, OwnerRegisterView, OwnerLogi
                     AddBoothManagerView, AddBoothView, BoothManagerLoginView, BoothManagerAddBikeView,
                     BoothManagerHomeView, BoothManagerPasswordUpdateView, BoothManagerAddCarView, CustomerLoginView,
                     MakeLicensedCustomerView, MakeReservationRequestView, ListPendingLicenseRequestView,
-                    CSRCustomerDetailView, ManageLicenseRequestView, make_reserv_request,
+                    CSRCustomerDetailView, ManageLicenseRequestView, make_reserv_request,CustomerAllReservView,
                     BoothManagerListReserveRequestView, ProcessReservationRequestView,
                     BoothManagerListAllReserveRequestView, SearchReservationRequestView, ShowResultView,
                     BoothManagerReturnReserveVehicleView)
@@ -21,6 +21,7 @@ urlpatterns = [
     path('cust-req-licensed/<int:pk>/', MakeLicensedCustomerView.as_view(), name="cust-req-licensed"),
     path('cust-req-reserv/<int:vid>/', MakeReservationRequestView.as_view(), name="cust-req-reserv"),
     path('req-reserv/<int:vid>/', make_reserv_request, name="cust-f-req-reserv"),
+    path('cust-view-all-reserv/', CustomerAllReservView.as_view(), name="cust-view-all-reserv"),
 
     ###########################################################################
     #                   Vehicle Owner Part

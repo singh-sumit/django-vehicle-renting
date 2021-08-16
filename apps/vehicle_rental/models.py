@@ -88,11 +88,11 @@ class Car(models.Model):
 
 
 RESERVATION_STATUS = (
-    ('INPROGESS', 'INPROGRESS'),
-    ('GRANTED', 'GRANTED'),  # granted by booth Manager
-    ('DENIED', 'DENIED'),  # denied by Booth manager
-    ('CANCELLED', 'CANCELLED'),  # cancelled by customer
-    ('COMPLETED', 'COMPLETED')
+    ('INPROGESS', 'INPROGRESS'),            # when customer puts reserve request
+    ('GRANTED', 'GRANTED'),                 # granted by booth Manager
+    ('DENIED', 'DENIED'),                   # denied by Booth manager
+    ('CANCELLED', 'CANCELLED'),             # cancelled by customer or by system when taken vehicle in time
+    ('COMPLETED', 'COMPLETED')              # while returning vehicle to booth
 )
 
 

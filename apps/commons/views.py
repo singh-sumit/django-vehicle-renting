@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import login, authenticate, logout
@@ -80,6 +81,9 @@ class CustomerRegisterView(CreateView):
         # Create customer instance from user object
         customer = Customer.objects.create(user=user, dob=dob, perm_address=perm_address,
                                            curr_address=curr_address, mobile=mobile)
+
+        Notification.objects.create(user_id=user.id,
+                                    message=f"Succesfully Registered!!")
 
         # make user login to system
         login(self.request, user)
@@ -165,6 +169,15 @@ def make_reserv_request(request, *args, **kwargs):
     veh.save()
     return redirect('commons:home')
 
+############################################################################
+#           Customer Required Mixin
+class CustomerRequiredMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        # check if requested user is customer
+        if (request.user.is_authenticated) and (Customer.objects.filter(user=request.user).exists()):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return render(request, '404.html', status=404)
 
 #############################################################################
 #               Customer Makes Reservation Request
@@ -181,6 +194,22 @@ class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
             context['notifications_count'] = len(notifications)
         return context
 
+#############################################################################
+#            Customer View All Reserve
+class CustomerAllReservView(CustomerRequiredMixin, ListView):
+    template_name = "customer/list_all_reserv.html"
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        notifications = Notification.objects.filter(user__id=self.request.user.id)
+        context['notifications'] = notifications.order_by("-id")[:5]
+        context['notifications_count'] = len(notifications)
+        return context
+
+    def get_queryset(self):
+        cust = self.request.user.customer
+        all_reservations = Reservation.objects.filter(reservation_request__customer=cust)
+        return all_reservations
 
 ###############################################################
 #              Customer Login View
@@ -196,12 +225,30 @@ class CustomerLoginView(FormView):
         # authenticate user
         usr = authenticate(username=uname, password=pwd)
 
-        if (usr is not None) and (Customer.objects.filter(user=usr).exists()):
+        if (usr is not None):
+            # make session for user
             login(self.request, usr)
+            if Customer.objects.filter(user=usr).exists():
+                # if customer
+                return redirect(reverse_lazy('commons:home'))
+            elif Owner.objects.filter(user=usr).exists():
+                # if owner
+                return redirect(reverse_lazy('commons:owner-home'))
+            elif BoothManager.objects.filter(user=usr).exists():
+                # if boothmanager
+                return redirect(reverse_lazy('commons:bmgr-home'))
+            elif CSR.objects.filter(user=usr).exists():
+                # if CSR
+                return redirect(reverse_lazy('commons:csr-home'))
+            elif Admin.objects.filter(user=usr).exists():
+                # if system admin
+                return redirect(reverse_lazy('commons:admin-home'))
+            else:
+                return self.form_invalid(form)
+
         else:
             return render(self.request, self.template_name,
                           {'form': form, 'error': 'Invalid Credentails'})
-        return super().form_valid(form)
 
     def form_invalid(self, form):
         return render(self.request, self.template_name,
@@ -233,6 +280,10 @@ class OwnerRegisterView(CreateView):
         # creating Owner instance
         owner = Owner.objects.create(user=user, perm_address=perm_address, curr_address=curr_address,
                                      mobile=mobile)
+
+        Notification.objects.create(user_id=user.id,
+                                    message=f"Succesfully Registered!!")
+
         # make user to login to system
         login(self.request, user)
         return redirect(self.success_url)
@@ -500,8 +551,12 @@ class BoothManagerHomeView(TemplateView):
     template_name = "bmgr/home.html"
 
     def get_context_data(self, **kwargs):
-        context = self.get_context_data(**kwargs)
-
+        context = super().get_context_data(**kwargs)
+        bm = self.request.user.boothmanager
+        veh = Vehicle.objects.filter(residing_booth=bm.booth)
+        context['vehicles_count'] = veh.count()
+        context['reservreq_count']=ReservationRequest.objects.filter(vehicle__in=veh, status="INPROGRESS").count()
+        context['denied_req_count'] = ReservationRequest.objects.filter(vehicle__in=veh, status="DENIED").count()
         return context
 
 
@@ -658,7 +713,7 @@ class ProcessReservationRequestView(View):
             Notification.objects.create(user_id=cust.user.id,
                                         message=f"#ReserveRequest_ID{reserv_req.id}: Sorry! Your request is denied "
                                                 f"because of sudden vehicle damage. Your are requested to reserve other vehicle.")
-
+        return redirect(reverse_lazy('commons:bmgr-home'))
 
 class ShowResultView(TemplateView):
     template_name = "bmgr/manage_return_of_veh/view_result.html"

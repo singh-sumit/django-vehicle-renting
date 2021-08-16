@@ -59,7 +59,7 @@
                                         Verify Identity
                                     </button>
                                 </td>
-                                <td>{{ vreq.vehicle_id }}</td>
+                                <td>{{ vreq.vehicle }}</td>
                                 <td>
                                     {% if vreq.status == 'INPROGRESS' %}
                                         <a href="{% url 'commons:bmgr-proces-reserv-req' vreq.id %}?action=grant"
