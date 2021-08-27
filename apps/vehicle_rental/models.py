@@ -120,3 +120,22 @@ class Reservation(models.Model):
     pre_payment = models.FloatField()
     fine = models.FloatField(null=True, blank=True)
     total = models.FloatField()
+
+
+###############################################################################
+#           Income table for Each User (Owner, BoothManager, SysAdmin)
+class InstantIncome(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reserv = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    earned_prepayment = models.FloatField()
+    earned_fine = models.FloatField(default=0)
+    earned_total = models.FloatField()
+    date_updated = models.DateField(auto_now=True)
+
+
+#################################################################################
+#       Balance sheet for Each User (Owner, BoothManager, SysAdmin)
+class BalanceSheet(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.FloatField()
+    date_created = models.DateField(auto_now_add=True)

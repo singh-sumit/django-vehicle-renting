@@ -13,8 +13,10 @@ from .forms import (CustomerRegisterationForm, OwnerRegisterationForm, UserLogin
                     BoothManagerAddCarForm, MakeLicensedCustomerForm, BoothManagerSearchReservedVehicleForm, )
 from .models import (Customer, Owner, Admin, CSR, Notification, CustomerType)
 from django.utils import timezone
+
+from .utils import divide_in_three
 from ..vehicle_rental.models import BoothManager, Bike, Car, Vehicle, ReservationRequest, VEHICLE_STATUS, \
-    RESERVATION_STATUS, Reservation
+    RESERVATION_STATUS, Reservation, InstantIncome, Booth
 
 
 # Create your views here.
@@ -169,6 +171,7 @@ def make_reserv_request(request, *args, **kwargs):
     veh.save()
     return redirect('commons:home')
 
+
 ############################################################################
 #           Customer Required Mixin
 class CustomerRequiredMixin(object):
@@ -178,6 +181,7 @@ class CustomerRequiredMixin(object):
             return super().dispatch(request, *args, **kwargs)
         else:
             return render(request, '404.html', status=404)
+
 
 #############################################################################
 #               Customer Makes Reservation Request
@@ -194,6 +198,7 @@ class MakeReservationRequestView(LicensedRequiredMixin, TemplateView):
             context['notifications_count'] = len(notifications)
         return context
 
+
 #############################################################################
 #            Customer View All Reserve
 class CustomerAllReservView(CustomerRequiredMixin, ListView):
@@ -208,8 +213,9 @@ class CustomerAllReservView(CustomerRequiredMixin, ListView):
 
     def get_queryset(self):
         cust = self.request.user.customer
-        all_reservations = Reservation.objects.filter(reservation_request__customer=cust)
+        all_reservations = Reservation.objects.filter(reservation_request__customer=cust).order_by('-return_date')
         return all_reservations
+
 
 ###############################################################
 #              Customer Login View
@@ -291,6 +297,26 @@ class OwnerRegisterView(CreateView):
     #
     def form_invalid(self, form):
         return super().form_invalid(form)
+
+
+###############################################################################################3
+#       Owner Home View
+class OwnerHomeView(TemplateView):
+    template_name = "owner/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # add notifications objects to context
+        if (self.request.user.is_authenticated) and (self.request.user.owner):
+            # notifications = Notification.objects.filter(user__id=self.request.user.id)
+            # context['notifications'] = notifications.order_by("-id")[:10]
+            # context['notifications_count'] = len(notifications)
+            context['vehicles_count'] = Vehicle.objects.filter(owner_id=self.request.user.owner.id).count()
+            context['current_income'] = InstantIncome.objects.filter(
+                user_id=self.request.user.id).order_by('-reserv_id')
+            return context
+        # print(">>>>>>", context)
+        return context
 
 
 #################################################################
@@ -391,6 +417,13 @@ class CSRHomeView(TemplateView):
             notifications = Notification.objects.filter(user__id=self.request.user.id)
             context['notifications'] = notifications.order_by("-id")[:10]
             context['notifications_count'] = len(notifications)
+            context['booth_count'] = Booth.objects.all().count()
+            context['owner_count'] = Owner.objects.all().count()
+            context['vehicles_count'] = Vehicle.objects.all().count()
+            # context['pending_license_count'] = ReservationRequest.objects.filter(vehicle__in=veh, status="INPROGRESS").count()
+            context['current_income'] = InstantIncome.objects.filter(user_id=self.request.user.id).order_by(
+                '-reserv_id')
+            return context
         # print(">>>>>>", context)
         return context
 
@@ -555,8 +588,9 @@ class BoothManagerHomeView(TemplateView):
         bm = self.request.user.boothmanager
         veh = Vehicle.objects.filter(residing_booth=bm.booth)
         context['vehicles_count'] = veh.count()
-        context['reservreq_count']=ReservationRequest.objects.filter(vehicle__in=veh, status="INPROGRESS").count()
+        context['reservreq_count'] = ReservationRequest.objects.filter(vehicle__in=veh, status="INPROGRESS").count()
         context['denied_req_count'] = ReservationRequest.objects.filter(vehicle__in=veh, status="DENIED").count()
+        context['current_income'] = InstantIncome.objects.filter(user_id=bm.user.id).order_by('-reserv_id')
         return context
 
 
@@ -669,7 +703,7 @@ class BoothManagerListAllReserveRequestView(ListView):
         booth = bmgr.booth
         # vreq = Vehicle.objects.filter(residing_booth=booth)
         # reserv_req = ReservationRequest.objects.filter(vehicle__in=vreq).order_by("-requested_date")
-        reserv_req = ReservationRequest.objects.all().order_by("-requested_date")
+        reserv_req = ReservationRequest.objects.all().order_by("-id")
         return reserv_req
 
 
@@ -696,6 +730,28 @@ class ProcessReservationRequestView(View):
             reserved = Reservation.objects.create(reservation_request=reserv_req, borrow_approver=bm,
                                                   expected_return_date=exp_return_date, pre_payment=initial_payment,
                                                   total=initial_payment, )
+
+            # save current prepayment to each user income table,Owner, SysAdmin, Borrow approver BoothManger
+            data = divide_in_three(initial_payment)
+            # saving income for owner
+            InstantIncome.objects.create(user_id=veh.owner.user.id,
+                                         reserv_id=reserved.id,
+                                         earned_prepayment=data['owner'],
+                                         earned_total=data['owner'], )
+
+            # saving income for borrow approver boothmanager
+            InstantIncome.objects.create(user_id=bm.user.id,
+                                         reserv_id=reserved.id,
+                                         earned_prepayment=data['borrowmanager'],
+                                         earned_total=data['borrowmanager'], )
+
+            admin = Admin.objects.all().first()
+            # saving income for system admin
+            InstantIncome.objects.create(user_id=admin.user.id,
+                                         reserv_id=reserved.id,
+                                         earned_prepayment=data['sysadmin'],
+                                         earned_total=data['sysadmin'])
+
             # provide notification to customer
             Notification.objects.create(user_id=cust.user.id,
                                         message=f"#Reserve_ID{reserved.id}: Your are requested to return vehicle at nearest booth by {reserved.expected_return_date}")
@@ -714,6 +770,7 @@ class ProcessReservationRequestView(View):
                                         message=f"#ReserveRequest_ID{reserv_req.id}: Sorry! Your request is denied "
                                                 f"because of sudden vehicle damage. Your are requested to reserve other vehicle.")
         return redirect(reverse_lazy('commons:bmgr-home'))
+
 
 class ShowResultView(TemplateView):
     template_name = "bmgr/manage_return_of_veh/view_result.html"
@@ -734,6 +791,7 @@ class ShowResultView(TemplateView):
         context['payable'] = reserv_req.pre_payment + penalty
         return context
 
+
 #######################################################################################################
 #     Search Reservation Request for Customer While Returning Vehicle     <-- BoothManager
 class SearchReservationRequestView(FormView):
@@ -743,16 +801,18 @@ class SearchReservationRequestView(FormView):
 
     def form_valid(self, form):
         reserv_id = form.cleaned_data.get('reservation_id')
-        cust_username = form.cleaned_data.get('cust_name')
+        # vehicle_platenum = form.cleaned_data.get('vehicle_platenum')
 
         try:
             reserv_req = Reservation.objects.get(id=reserv_id)
+            # reserv_req = Reservation.objects.filter(id=reserv_id,
+            #                                         reservation_request__vehicle__plate_num=vehicle_platenum).first()
         except Exception:
             return render(self.request, self.template_name,
                           {'form': form, 'error': 'Enter proper Reserve Id and name'})
 
         # else return to success url
-        return redirect(reverse_lazy('commons:bmgr-view-reserv-req', kwargs={'reserv_id':3, }))
+        return redirect(reverse_lazy('commons:bmgr-view-reserv-req', kwargs={'reserv_id': reserv_req.id, }))
 
     def form_invalid(self, form):
         return render(self.request, self.template_name,
@@ -767,40 +827,86 @@ class BoothManagerReturnReserveVehicleView(View):
         bm = self.request.user.boothmanager
         reserv_id = kwargs['reserv_id']
 
-        reserv_req = Reservation.objects.get(id=reserv_id)
+        reserv = Reservation.objects.get(id=reserv_id)
         # calculate fine
-        date_diff = timezone.now().date() - reserv_req.expected_return_date
+        date_diff = timezone.now().date() - reserv.expected_return_date
         if date_diff.days > 0:
-            penalty = date_diff.days * reserv_req.reservation_request.vehicle.fare
+            penalty = date_diff.days * reserv.reservation_request.vehicle.fare
         else:
             penalty = 0
 
         # save fine to reservation table
-        reserv_req.fine = penalty
-        reserv_req.total = reserv_req.pre_payment + penalty
-        reserv_req.return_approver = bm
-        reserv_req.return_date = timezone.now()
-        reserv_req.save()
+        reserv.fine = penalty
+        reserv.total = reserv.pre_payment + penalty
+        reserv.return_approver = bm
+        reserv.return_date = timezone.now()
+        reserv.save()
 
         # make reservation request of customer to "COMPLETED"
-        reserv_req.reservation_request.status = RESERVATION_STATUS[4][1]            # COMPLETED
-        reserv_req.reservation_request.save()
+        reserv.reservation_request.status = RESERVATION_STATUS[4][1]  # COMPLETED
+        reserv.reservation_request.save()
 
         # make vehicle AVAILABLE as well change residing booth location to current boothmanager's booth
-        reserv_req.reservation_request.vehicle.status = VEHICLE_STATUS[0][1]
-        reserv_req.reservation_request.vehicle.residing_booth = bm.booth
-        reserv_req.reservation_request.vehicle.save()
+        reserv.reservation_request.vehicle.status = VEHICLE_STATUS[0][1]
+        reserv.reservation_request.vehicle.residing_booth = bm.booth
+        reserv.reservation_request.vehicle.save()
+
+        # save current prepayment to each user income table,Owner, SysAdmin, Borrow approver BoothManger
+        data = divide_in_three(reserv.fine)
+        # saving income from fine to owner
+        owner_incomeInstance = InstantIncome.objects.filter(user_id=reserv.reservation_request.vehicle.owner.user.id,
+                                                            reserv_id=reserv_id).first()
+        owner_incomeInstance.earned_fine = data['owner']
+        owner_incomeInstance.earned_total += data['owner']
+        owner_incomeInstance.save()
+
+        # saving income from fine to borrow approver boothmanager
+        borrow_bm_incomeInstance = InstantIncome.objects.filter(user_id=reserv.borrow_approver.user.id,
+                                                                reserv_id=reserv_id).first()
+        borrow_bm_incomeInstance.earned_fine = data['borrowmanager']
+        borrow_bm_incomeInstance.earned_total += data['borrowmanager']
+        borrow_bm_incomeInstance.save()
+
+        admin = Admin.objects.all().first()
+        # saving income from fine to system admin
+        admin_incomeInstance = InstantIncome.objects.filter(user_id=admin.user.id, reserv_id=reserv_id).first()
+        admin_incomeInstance.earned_fine = data['sysadmin']
+        admin_incomeInstance.earned_total += data['sysadmin']
+        admin_incomeInstance.save()
+
+        # saving income to return approver boothmanager
+        rbm_incomeInstance = InstantIncome(
+            user_id=bm.user.id,
+            reserv_id=reserv_id,
+            earned_prepayment=((reserv.pre_payment * 5) / 100.0),
+            earned_fine=((reserv.fine * 5) / 100.0),
+        )
+        rbm_incomeInstance.earned_total = rbm_incomeInstance.earned_prepayment + rbm_incomeInstance.earned_fine
+        rbm_incomeInstance.save()
 
         # send notification to customer saying vehicle returned successfully
-        Notification.objects.create(user_id=reserv_req.reservation_request.customer.user_id,
-                                    message=f"Successfully returned a vehicle with #Reserve_{reserv_req.id} to "
+        Notification.objects.create(user_id=reserv.reservation_request.customer.user_id,
+                                    message=f"Successfully returned a vehicle with #Reserve_{reserv.id} to "
                                             f"booth {bm.booth}")
+
+        return redirect('commons:bmgr-home')
 
 
 ########################################################################3
 #           System Admin Home View
 class SystemAdminHomeView(TemplateView):
     template_name = "sysadmin/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # add notifications objects to context
+        if (self.request.user.is_authenticated) and (self.request.user.admin):
+            context['vehicles_count'] = Vehicle.objects.all().count()
+            context['booth_count'] = Booth.objects.all().count()
+            context['current_income'] = InstantIncome.objects.filter(
+                user_id=self.request.user.id).order_by('-reserv_id')
+            return context
+        return context
 
 
 #########################################################################

@@ -339,7 +339,7 @@ class BoothManagerAddCarForm(BaseAddVehicleForm):
 #           Form for Searching Reserved Vehicle <-- Booth Manager
 class BoothManagerSearchReservedVehicleForm(forms.Form):
     reservation_id = forms.CharField(widget=forms.NumberInput(), help_text="Reservation Id: like Reserve_ID4")
-    cust_name = forms.CharField(max_length=40,required=False,label="Customer Name")
+    # vehicle_platenum = forms.CharField(max_length=40,required=False,label="Vehicle Plate Number")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -347,7 +347,7 @@ class BoothManagerSearchReservedVehicleForm(forms.Form):
         self.helper.layout = Layout(
             Row(
                 Column('reservation_id', css_class='form-group '),
-                Column('cust_name', css_class='form-group ',),
+                # Column('vehicle_platenum', css_class='form-group ',),
                 css_class='form-row'
             ),
         )

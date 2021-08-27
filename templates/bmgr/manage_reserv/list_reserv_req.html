@@ -1,4 +1,5 @@
 {% extends 'bmgr/base.html' %}
+{% load utility_tags %}
 
 {% block title %}Manage Reserve Request | Booth Manager{% endblock title %}
 
@@ -32,6 +33,7 @@
                             <th>Reserve Period</th>
                             <th>Customer</th>
                             <th>Vehicle Id</th>
+                            <th>Pre Payment</th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -61,9 +63,12 @@
                                 </td>
                                 <td>{{ vreq.vehicle }}</td>
                                 <td>
+                                    {% multiply vreq.vehicle.fare vreq.reserv_period %}
+                                </td>
+                                <td>
                                     {% if vreq.status == 'INPROGRESS' %}
                                         <a href="{% url 'commons:bmgr-proces-reserv-req' vreq.id %}?action=grant"
-                                           class="btn btn-sm btn-success">Grant</a> |
+                                           class="btn btn-sm btn-success">Grant</a> |<br>
                                     {% endif %}
                                     <a href="{% url 'commons:bmgr-proces-reserv-req' vreq.id %}?action=deny"
                                        class="btn btn-sm btn-outline-danger">Reject</a>

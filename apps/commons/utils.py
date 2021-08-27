@@ -1,10 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-
 ###################################################
 #               validte phone number
 import re
+
+
 def validate_phone(phone):
     if phone.isnumeric():
         # pattern : 9812345678
@@ -16,6 +17,7 @@ def validate_phone(phone):
     else:
         raise ValidationError("Phone number must be numeric")
 
+
 #####################################################################
 #                   Calculate age given two dates
 def age(dob):
@@ -26,8 +28,24 @@ def age(dob):
     else:
         return today.year - dob.year
 
+
 #####################################################################
 #               Validate is provide text numeric
 def is_number(value):
     if not value.isnumeric():
         raise ValidationError("Must be integer.")
+
+
+####################################################################################################################
+# function for dividing inital-payment/fine recieved between Owner, Borrow Approver BoothManager , and SysAdmin
+def divide_in_three(payment):
+    """ BoothManager(Borrow approver) : 5%
+     BoothManager(Reciev approver) : 5%
+     SysAdmin                      : 2%
+     Owner                         : 88%"""
+    data = {
+        'borrowmanager': (payment * 5) / 100.0,
+        'sysadmin': (payment * 2) / 100.0,
+        'owner': (payment * 88) / 100.0,
+    }
+    return data

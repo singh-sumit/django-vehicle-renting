@@ -1,31 +1,11 @@
-{% extends 'csr/base.html' %}
+{% extends 'owner/base.html' %}
 
-{% block title %}CSR Home{% endblock title %}
+{% block title %}Owner Home{% endblock title %}
 
 {% block main %}
-<h4>This is CSR home page.</h4>
 
-     <!-- Content Row -->
+    <!-- Content Row -->
     <div class="row">
-
-        <!-- Total Owner Count -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Vehicle Owners
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ owner_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user fa-2x text-gray-500"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Pending Requests Card Example -->
         <div class="col-xl-3 col-md-6 mb-4">
@@ -65,25 +45,6 @@
             </div>
         </div>
 
-        <!-- Available Booth Count -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Available Booth
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ booth_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-building fa-2x text-gray-500"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Request Denied Count Card -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-danger shadow h-100 py-2">
@@ -104,4 +65,50 @@
         </div>
     </div>
     <!-- Content Row -->
+
+    <!-- List Booth Manager Income Content -->
+    <div class="container-fluid">
+
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4 m-5">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Current Reservation Income</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>Reserve ID</th>
+                            <th>Vehicle</th>
+                            <th>Date</th>
+                            <th>Pre payment</th>
+                            <th>Fine</th>
+                            <th>Earned Total</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for income in current_income %}
+                            <tr>
+                                <td class="text-dark font-weight-bold">#RESERV_{{ income.reserv.id }}</td>
+                                <td>{{ income.reserv.reservation_request.vehicle }}</td>
+                                <td>{{ income.date_updated }}</td>
+                                <td>{{ income.earned_prepayment }}</td>
+                                <td>{{ income.earned_fine }}</td>
+                                <td>{{ income.earned_total }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <span class="text-danger font-weight-bolder">No Reservation Done yet</span>
+                            </tr>
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock main %}
