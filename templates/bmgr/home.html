@@ -3,5 +3,110 @@
 {% block title %}Booth Manager Home{% endblock title %}
 
 {% block main %}
-<h4>This is Booth Manager home page.</h4>
+
+    <!-- Content Row -->
+    <div class="row">
+
+        <!-- Pending Requests Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Requests
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reservreq_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Vehicle Count Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Available Vehicles
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ vehicles_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck-monster fa-2x text-gray-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Denied Count Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Reserve Request Denied
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ denied_req_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Content Row -->
+
+    <!-- List Booth Manager Income Content -->
+    <div class="container-fluid">
+
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4 m-5">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Current Reservation Income</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>Reserve ID</th>
+                            <th>Date</th>
+                            <th>Pre payment</th>
+                            <th>Fine</th>
+                            <th>Earned Total</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for income in current_income %}
+                            <tr>
+                                <td class="text-dark font-weight-bold">#RESERV_{{ income.reserv.id }}</td>
+                                <td>{{ income.date_updated }}</td>
+                                <td>{{ income.earned_prepayment }}</td>
+                                <td>{{ income.earned_fine }}</td>
+                                <td>{{ income.earned_total }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <span class="text-danger font-weight-bolder">No Reservation Done yet</span>
+                            </tr>
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock main %}

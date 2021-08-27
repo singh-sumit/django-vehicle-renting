@@ -1,0 +1,86 @@
+{% extends 'bmgr/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Manage Return of Vehicle{% endblock title %}
+
+{% block page_operation %}
+    Manage Returned Vehicle
+{% endblock page_operation %}
+
+{% block main %}
+
+    <!-- Result part -->
+    {% if reserv_req %}
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+            <!-- DataTales Example -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Reservation #{{ reserv_req.id }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                            <tr>
+                                <th>Reserve ID</th>
+                                <th>Borrow Date</th>
+                                <th>Expected Return Date</th>
+                                <th>Initial Payment</th>
+                                <th>Customer</th>
+                                <th>Vehicle Id</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            <tr>
+                                <td class="text-dark font-weight-bolder">#RESERVE_{{ reserv_req.id }}</td>
+                                <td>{{ reserv_req.borrow_date }}</td>
+                                <td>{{ reserv_req.expected_return_date }}</td>
+                                <td class="text-success font-weight-bolder">{{ reserv_req.pre_payment }}</td>
+                                <td>
+                                    #CUSTOMER_{{ reserv_req.reservation_request.customer.user.username }}<br>
+                                    {{ reserv_req.customer.user.username }}<br>
+                                </td>
+                                <td>{{ reserv_req.reservation_request.vehicle }}</td>
+                                <td>
+                                    {% if reserv_req.reservation_request.status == 'COMPLETED' %}
+                                        <button class="btn btn-sm btn-primary">
+                                            Paid
+                                        </button>
+                                    {% else %}
+                                        <a href="{% url 'commons:bmgr-return-reserv-veh' reserv_req.id %}"
+                                           class="btn btn-sm btn-primary">Accept</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        {% if extra_days > 0 %}
+                            Extra Days : {{ extra_days }}
+                            <span class="text-danger font-weight-bolder">Penalty : {{ penalty }}</span>
+                        {% else %}
+                            Extra Days : 0
+                            Penalty : 0
+                        {% endif %}
+                        <h6 class="text-dark mt-2">
+                            Remaining Charge to be payed :
+                            <span class="text-info font-weight-bolder">
+                                $ {{ penalty }}
+                            </span>
+                        </h6>
+                        <h5 class="text-dark">
+                            Total Payment :
+                            <span class="text-info font-weight-bolder">
+                                $ {{ payable }}
+                            </span>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <!-- End Result part -->
+{% endblock main %}

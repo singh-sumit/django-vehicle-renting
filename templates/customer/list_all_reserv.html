@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Reserve List
+{% endblock title %}
+
+{% block main %}
+    <!-- Begin Page Content -->
+    <div class="container-fluid">
+
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4 m-5">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">All Completed Reservation</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>Reserve ID</th>
+                            <th>Borrow Date</th>
+                            <th>Return Date</th>
+                            <th>Vehicle Taken</th>
+                            <th>Taken from</th>
+                            <th>Returned To</th>
+                            <th>Inital Payment</th>
+                            <th>Fine</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for reserv in reservation_list %}
+                            <tr>
+                                <td class="text-dark font-weight-bold">#RESERV_{{ reserv.id }}</td>
+                                <td>{{ reserv.borrow_date }}</td>
+                                {% if reserv.return_approver %}
+                                <td>{{ reserv.return_date }}</td>
+                                {% else %}
+                                    <td>
+                                        {{ reserv.expected_return_date }}<br>
+                                        Expected
+                                    </td>
+                                {% endif %}
+                                <td>
+                                    <span class="text-dark font-weight-bold">{{ reserv.reservation_request.vehicle }}</span><br>
+                                    {{ reserv.reservation_request.vehicle.brand }}
+                                </td>
+                                <td>{{ reserv.borrow_approver.booth.name }}</td>
+                                <td>{{ reserv.return_approver.booth.name }}</td>
+                                <td>{{ reserv.pre_payment }}</td>
+                                <td class="text-danger font-weight-bolder">{{ reserv.fine }}</td>
+                                <td class="text-primary font-weight-bolder">{{ reserv.total }}</td>
+
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <span class="text-danger font-weight-bolder">No Reservation Done yet</span>
+                            </tr>
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}

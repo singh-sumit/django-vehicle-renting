@@ -1,0 +1,110 @@
+{% extends 'bmgr/base.html' %}
+{% load utility_tags %}
+
+{% block title %}Manage Reserve Request | Booth Manager{% endblock title %}
+
+{% block style %}
+    <style>
+
+    </style>
+{% endblock style %}
+
+{% block page_operation %}
+    Manage Reserve Request
+{% endblock page_operation %}
+{% block main %}
+
+    <!-- Begin Page Content -->
+    <div class="container-fluid">
+
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Reserve Request</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Reserve Period</th>
+                            <th>Customer</th>
+                            <th>Vehicle Id</th>
+                            <th>Pre Payment</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for vreq in object_list %}
+                            <tr>
+                                <td>#Request_{{ vreq.id }}</td>
+                                <td>{{ vreq.requested_date }}</td>
+                                {% if vreq.status == 'INPROGRESS' %}
+                                    <td class="badge badge-info badge-pill">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'GRANTED' %}
+                                    <td class="badge badge-success badge-pill mt-2">{{ vreq.status }}</td>
+                                {% elif vreq.status == 'DENIED' %}
+                                    <td class="badge badge-danger badge-pill">{{ vreq.status }}</td>
+                                {% endif %}
+                                <td>{{ vreq.reserv_period }}</td>
+                                <td>
+                                    #CUSTOMER_{{ vreq.customer_id }}<br>
+                                    {{ vreq.customer.user.username }}<br>
+                                    <!-- Button trigger modal -->
+                                    <button type="button" class="btn btn-sm btn-primary" data-toggle="modal"
+                                            data-target="#exampleModal{{ vreq.id }}">
+                                        Verify Identity
+                                    </button>
+                                </td>
+                                <td>{{ vreq.vehicle }}</td>
+                                <td>
+                                    {% multiply vreq.vehicle.fare vreq.reserv_period %}
+                                </td>
+                                <td>
+                                    {% if vreq.status == 'INPROGRESS' %}
+                                        <a href="{% url 'commons:bmgr-proces-reserv-req' vreq.id %}?action=grant"
+                                           class="btn btn-sm btn-success">Grant</a> |<br>
+                                    {% endif %}
+                                    <a href="{% url 'commons:bmgr-proces-reserv-req' vreq.id %}?action=deny"
+                                       class="btn btn-sm btn-outline-danger">Reject</a>
+                                </td>
+                            </tr>
+
+
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="exampleModal{{ vreq.id }}" tabindex="-1" aria-labelledby="exampleModalLabel{{ vreq.id }}"
+                                 aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel{{ vreq.id }}">License Certificate</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <img src="{{ vreq.customer.license_doc.url }}" class="img-fluid">
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
