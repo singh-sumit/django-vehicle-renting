@@ -14,3 +14,6 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vehicleRenting.settings')
 
 application = get_wsgi_application()
+
+# As vercel requires : https://dev.to/ksharma20/how-to-deploy-a-django-web-app-on-vercel-for-free-4fhe
+app = application
