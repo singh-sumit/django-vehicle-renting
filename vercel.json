@@ -1,14 +1,14 @@
 {
     "builds": [
       {
-        "src": "django-vehicle-renting/vehicleRenting/wsgi.py",
+        "src": "vehicleRenting/wsgi.py",
         "use": "@vercel/python"
       }
     ],
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "django-vehicle-renting/vehicleRenting/wsgi.py"
+        "dest": "vehicleRenting/wsgi.py"
       }
     ]
   }
